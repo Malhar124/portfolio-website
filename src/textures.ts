@@ -187,9 +187,7 @@ export function vinylTexture(label: string, title: string) {
 }
 
 // Shown until public/photo.jpg exists: a sepia studio portrait silhouette.
-export const photoPlaceholder = () => tex(paintPhotoPlaceholder())
-
-export function paintPhotoPlaceholder() {
+export function photoPlaceholder() {
   const c = makeCanvas(600, 780)
   const x = ctx2d(c)
   const g = x.createRadialGradient(300, 300, 40, 300, 360, 520)
@@ -205,7 +203,7 @@ export function paintPhotoPlaceholder() {
   x.ellipse(300, 820, 270, 330, 0, Math.PI, 0)
   x.fill()
   grain(x, 0.3, 600, 780)
-  return c
+  return tex(c)
 }
 
 // Cover-fits the photo into a frame of the given aspect (width / height), keeping the top (faces).

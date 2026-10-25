@@ -29,7 +29,7 @@ export const profile = {
   resume: '/resume.pdf',
   // Your photo, 3:4 (the desk frame shows all of it).
   photo: '/photo.jpg',
-  // Where you are in the photo, as fractions of its width and height; the small crops (contact sheet, file) centre on it.
+  // Where you are in the photo, as fractions of its width and height; the artist file's small thumbnail centres on it.
   photoFocus: [0.31, 0.47] as [number, number],
 }
 
