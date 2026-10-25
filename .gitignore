@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel
+.DS_Store
+.claude/settings.local.json
+# source copy of the résumé; the site serves public/resume.pdf
+Resume (9).pdf
+# the original iPhone photo (HEIC, which browsers can't show); the site uses public/photo.jpg made from it
+public/photo.png
