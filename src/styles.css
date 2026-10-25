@@ -754,84 +754,82 @@ a {
   }
 }
 
-/* ---------- record modal: liner notes ---------- */
+/* ---------- album window ---------- */
 
-.liner {
+/* a larger crate card beside the shrunken desk; the page behind stays visible */
+.album[open] {
   position: fixed;
   inset: 0;
+  display: grid;
+  place-items: center end;
   width: 100%;
   height: 100%;
   max-width: none;
   max-height: none;
   margin: 0;
-  padding: 0;
+  padding: 92px var(--gutter) 28px;
   border: 0;
-  background: var(--room-deep);
-  color: var(--parchment);
+  background: transparent;
+  color: var(--ink);
   overflow: hidden;
 }
 
-.liner::backdrop {
-  background: transparent;
+.album::backdrop {
+  background: rgb(8 5 3 / 0.3);
 }
 
-.liner__backdrop,
-.liner__backdrop canvas {
+.album__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(600px, 46vw);
+  max-height: 100%;
+  padding: 10px;
+  border-radius: 3px 10px 10px 10px;
+  background: var(--paper);
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 0.3),
+    0 24px 60px rgb(0 0 0 / 0.5);
+}
+
+/* the same divider tab as the crate card, naming the drawer the record came from */
+.album__tab {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  padding: 10px 20px 4px;
+  border-radius: 10px 10px 0 0;
+  background: var(--paper);
+  font: italic 500 22px/1.2 var(--serif);
+}
+
+.album__banner {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: calc(var(--sleeve) + 48px);
+  padding: 0 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1a1410;
+}
+
+.album__glow,
+.album__glow canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.liner__bar {
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 10px var(--gutter);
-}
-
-.liner__spacer {
-  flex: 1;
-}
-
-.glass-host {
-  display: inline-flex;
-}
-
-.liner .glass-button-text {
-  font-family: var(--sans);
-  font-weight: 500;
-}
-
-.glass-button:focus-visible {
-  outline: 2px solid var(--parchment);
-  outline-offset: 2px;
-}
-
-.liner__grid {
+.album__record {
   position: relative;
-  z-index: 1;
-  height: 100%;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 6vw;
-  padding: 100px var(--gutter) 48px;
-}
-
-.liner__record {
-  position: relative;
-  justify-self: end;
-  width: min(46vh, 32vw);
+  width: var(--sleeve);
   aspect-ratio: 1;
-  margin-right: 14%;
 }
 
-.liner__sleeve {
+.album__sleeve {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -839,7 +837,7 @@ a {
   border-radius: 2px;
   box-shadow:
     0 4px 10px rgb(0 0 0 / 0.4),
-    0 40px 80px rgb(0 0 0 / 0.55);
+    0 24px 48px rgb(0 0 0 / 0.5);
 }
 
 .cover,
@@ -855,13 +853,13 @@ a {
   display: block;
 }
 
-.liner__disc {
+.album__disc {
   position: absolute;
   inset: 3%;
 }
 
 /* light catching the grooves stays put while the record turns */
-.liner__disc::after {
+.album__disc::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -870,18 +868,18 @@ a {
   pointer-events: none;
 }
 
-.liner__vinyl {
+.album__vinyl {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
   border-radius: 50%;
   background: repeating-radial-gradient(circle, #0d0d0e 0 1.5px, #1b1b1d 1.5px 3px);
-  box-shadow: 0 30px 60px rgb(0 0 0 / 0.6);
+  box-shadow: 0 20px 40px rgb(0 0 0 / 0.55);
   animation: spin 4.8s linear infinite;
 }
 
-.liner__label {
+.album__label {
   display: grid;
   place-items: center;
   width: 38%;
@@ -890,100 +888,92 @@ a {
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25);
 }
 
-.liner__notes {
-  position: relative;
-  max-width: calc(54ch + 80px);
-}
-
-.liner__copy {
-  position: relative;
-  z-index: 1;
-  padding: clamp(24px, 3vw, 40px);
-}
-
-/* frosted glass behind the notes: liquid-glass refraction plus a medium dark tint for contrast */
-.liner__glass-host {
+.album__actions {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: 28px;
+  inset: 12px 12px 12px auto;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  justify-content: space-between;
 }
 
-.liner__glass-host > .glass-container {
-  width: 100%;
-  height: 100%;
-  padding: 0;
+.glass-host {
+  display: inline-flex;
 }
 
-.liner__glass-host::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgb(12 17 21 / 0.5);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+.album .glass-button-text {
+  font-family: var(--sans);
+  font-weight: 500;
 }
 
-.liner__after {
+.glass-button:focus-visible {
+  outline: 2px solid var(--parchment);
+  outline-offset: 2px;
+}
+
+.album__notes {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 16px 8px;
+}
+
+.album__after {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin: 0;
   font-size: 13px;
-  color: var(--parchment-dim);
+  color: var(--ink-soft);
 }
 
 /* space reserved for the fetched thumbnail so the notes don't jump when it arrives */
-.liner__art {
+.album__art {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
 }
 
-.liner__after img {
+.album__after img {
   display: block;
   border-radius: 2px;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.4);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
 }
 
-.liner__after cite {
-  font-style: italic;
-}
-
-/* a sturdy condensed grotesque, as on a record sleeve: the titles run long and sit on dark glass */
-.liner__notes h2 {
-  margin: 18px 0 12px;
-  font: 600 semi-condensed clamp(26px, 2.6vw, 38px)/1.12 Archivo, var(--sans);
-  letter-spacing: -0.01em;
+.album__notes h2 {
+  margin: 14px 0 6px;
+  font: 600 22px/1.25 var(--sans);
   text-wrap: balance;
 }
 
-.liner__meta {
+.album__meta {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--parchment-dim);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
 }
 
-.liner__tracks {
+.album__tracks {
   display: grid;
-  gap: 14px;
-  margin: 28px 0;
-  padding: 0;
+  gap: 12px;
+  margin: 16px 0 8px;
+  padding: 14px 0 0;
+  border-top: 1px solid rgb(35 27 20 / 0.18);
   list-style: none;
 }
 
-.liner__tracks li {
+.album__tracks li {
   display: grid;
-  grid-template-columns: 30px 1fr;
-  gap: 12px;
-  line-height: 1.6;
-  color: rgb(242 233 219 / 0.92);
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
-.liner__no {
-  font: 600 13px/1.9 var(--sans);
-  color: var(--brass);
+/* brass darkened enough to read on the cream card */
+.album__no {
+  font: 600 12px/1.9 var(--sans);
+  color: #7d5f22;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1139,17 +1129,18 @@ a {
     gap: 2px;
   }
 
-  .liner__grid {
-    grid-template-columns: 1fr;
-    align-items: start;
-    gap: 40px;
-    padding-top: 84px;
+  .album[open] {
+    place-items: end stretch;
+    padding: 72px 16px max(16px, env(safe-area-inset-bottom));
   }
 
-  .liner__record {
-    justify-self: start;
-    width: 62vw;
-    margin: 0 0 0 4vw;
+  .album__card {
+    width: auto;
+    max-height: 72dvh;
+  }
+
+  .album__notes h2 {
+    font-size: 19px;
   }
 
   .file dl > div {
@@ -1159,7 +1150,7 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .liner__vinyl,
+  .album__vinyl,
   .loader__disc,
   .hero__cue::after,
   .file__paper {

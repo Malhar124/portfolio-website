@@ -27,9 +27,8 @@ const LAYOUT = {
 }
 // Turntable, in its own space: platter centre, tonearm pivot, and how far the arm swings to reach the record.
 const DECK = { px: -0.13, pz: 0.02, pivot: [0.42, 0.15, -0.27] as const, swing: 0.53 }
-// how far the camera looks down onto the turntable while a record is put on; steeper on tall screens so the open
-// drawer below stays hidden under the table top
-const FOCUS_TILT = { landscape: 0.95, portrait: 1.3 }
+// how far the table top tips towards the camera while an album is open (radians from upright)
+const TOP_FRONT = 0.78
 const UP = new THREE.Vector3(0, 1, 0)
 const { lerp, clamp, smoothstep, damp } = THREE.MathUtils
 
@@ -46,12 +45,12 @@ type Vinyls = Map<CoverId, THREE.Material[]>
 // Each sleeve's disc, so the turntable can start a record's flight exactly where its disc is.
 const discs = new Map<CoverId, THREE.Object3D>()
 
-// While the camera focuses on the turntable the crate is put away: records go back into their drawer during the
-// first half of stage.play and the drawer shuts during the second half (and the reverse on the way back), so a
-// record is never outside a drawer that is moving.
+// While an album is open the camera looks down onto the table top, so the crate is put away first: records go back
+// into their drawer during the first half of stage.album and the drawer shuts during the second half (the reverse on
+// the way back), so a record is never outside a drawer that is moving and nothing stands in front of the turntable.
 type DrawerState = (typeof stage.drawers)[number]
-const riseOf = (s: DrawerState) => s.rise * (1 - smoothstep(stage.play, 0, 0.5))
-const openOf = (s: DrawerState) => s.open * (1 - smoothstep(stage.play, 0.5, 1))
+const riseOf = (s: DrawerState) => s.rise * (1 - smoothstep(stage.album, 0, 0.5))
+const openOf = (s: DrawerState) => s.open * (1 - smoothstep(stage.album, 0.5, 1))
 
 const hover = (id: string) => (e: ThreeEvent<PointerEvent>) => {
   e.stopPropagation()
@@ -122,7 +121,7 @@ function Rig(props: Props) {
     const aspect = size.width / size.height
     const portrait = aspect < 0.9
     const t = stage.turn
-    const p = stage.play
+    const a = stage.album
     const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2))
     const fit = (w: number, h: number) => Math.max(h / 2 / tan, w / 2 / (tan * aspect))
     // top view frames the table top; front view leaves room for records rising above the desk
@@ -134,24 +133,20 @@ function Rig(props: Props) {
 
     look.current.x = damp(look.current.x, pointer.x, 3, dt)
     look.current.y = damp(look.current.y, pointer.y, 3, dt)
-    const tilt = lerp(lerp(Math.PI / 2, 0.16, t) - look.current.y * 0.035, portrait ? FOCUS_TILT.portrait : FOCUS_TILT.landscape, p)
-    inner.current.rotation.x = tilt
+    // front view while browsing; with an album open, tipped towards the camera so the record can be seen playing
+    inner.current.rotation.x = lerp(lerp(Math.PI / 2, 0.16, t), TOP_FRONT, a) - look.current.y * 0.035
     // at the contact section the desk turns to face the card
-    inner.current.rotation.y = (look.current.x * 0.06 + stage.outro * (portrait ? 0.3 : 0.45)) * (1 - p)
+    inner.current.rotation.y = look.current.x * 0.06 + stage.outro * (portrait ? 0.3 : 0.45)
     // on tall screens the desk starts rolled 90° so its long side runs down the screen
     outer.current.rotation.z = portrait ? -(Math.PI / 2) * (1 - t) : 0
 
-    // While a record is put on, centre and frame the turntable (it sits on the table top at z = 0).
-    const deckX = portrait ? LAYOUT.portrait.deck : LAYOUT.landscape.deck
-    const deckY = (SURFACE + 0.1) * Math.cos(tilt)
-    const deckZ = (SURFACE + 0.1) * Math.sin(tilt)
-    const focusDist = deckZ + (portrait ? fit(1.35, 1.35) : fit(2.6, 1.7))
-    cam.position.set(0, 0, lerp(baseDist, focusDist, p))
+    cam.position.set(0, 0, baseDist)
     cam.lookAt(0, 0, 0)
-    const baseX = portrait ? 0 : -stage.shift * visW * 0.17
-    const baseY = portrait ? stage.shift * visH * 0.18 - t * 0.3 : -t * 0.35
-    outer.current.position.x = lerp(baseX, -deckX, p)
-    outer.current.position.y = lerp(baseY, -deckY, p)
+    // an open album window takes more room than a crate card: the desk shrinks and moves further aside, and with
+    // the records put away it no longer needs the headroom above it
+    outer.current.scale.setScalar(1 - a * (portrait ? 0.3 : 0.1))
+    outer.current.position.x = portrait ? 0 : -(stage.shift * 0.17 + a * 0.07) * visW
+    outer.current.position.y = portrait ? (stage.shift * 0.18 + a * 0.12) * visH - t * 0.3 : -t * 0.35 * (1 - a)
   })
 
   return (

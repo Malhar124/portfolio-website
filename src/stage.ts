@@ -9,6 +9,6 @@ export const stage = {
   drawers: [0, 1, 2].map(() => ({ open: 0, rise: 0 })),
   hover: '', // id of the record or drawer under the pointer
   lamp: 1, // desk lamp brightness; the intro flickers it on
-  play: 0, // 1 = camera focused on the turntable while a record is put on
+  album: 0, // 1 while an album window is open: the desk shrinks a little and moves aside to make room for it
   deck: { id: '' as CoverId | '', drop: 0, arm: 0 }, // record on the turntable; drop 0→1 flies it onto the platter
 }

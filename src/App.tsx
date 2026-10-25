@@ -25,9 +25,8 @@ const FONTS = [
   '600 40px "Bodoni Moda"',
   '500 40px Archivo',
   '800 40px Archivo',
-  '40px UnifrakturMaguntia',
+  '40px Fruktur',
   '40px Yellowtail',
-  '900 40px "Noto Sans JP"',
 ]
 
 // Scroll timeline, in units of SCROLL_PER_UNIT viewport heights of scrolling.
@@ -36,6 +35,8 @@ const END = 8.3
 // how much scrolling one timeline unit takes, in viewport heights; raise it to make scrolling less sensitive
 const SCROLL_PER_UNIT = 1.3
 const BEAM_SHIFT = (-0.17 / 1.4) * 100
+// with an album window open the desk moves a further 7% aside (see Rig in Scene.tsx)
+const BEAM_ALBUM = (-0.24 / 1.4) * 100
 const SECTIONS = [
   ['projects', 'Projects'],
   ['research', 'Research'],
@@ -55,13 +56,12 @@ export default function App() {
   const lenis = useRef<Lenis>(null)
   const timeline = useRef<gsap.core.Timeline>(null)
   const jump = useRef<gsap.core.Timeline>(null)
-  const playing = useRef<gsap.core.Timeline>(null)
   const [soundOn, setSoundOn] = useState(sound.enabled)
 
   useEffect(() => {
     // never hang on a slow font CDN: paint with fallbacks after 4s
     const timeout = new Promise(r => setTimeout(r, 4000))
-    const fonts = Promise.all(FONTS.map(f => document.fonts.load(f, f.includes('Noto') ? 'ティックランド' : undefined)))
+    const fonts = Promise.all(FONTS.map(f => document.fonts.load(f)))
     Promise.race([fonts, timeout]).then(() => setCovers(paintCovers()))
   }, [])
 
@@ -203,57 +203,45 @@ export default function App() {
     if (label === 'contact') j.to('.sleeve', { rotateY: 180, duration: 0.6, ease: 'power2.inOut' })
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) j.progress(1)
   }
-  // Opening a record puts it on the turntable first: the vinyl slides out of its sleeve, flies onto the platter while
-  // the camera looks down and the other records step back, and the arm swings over. Then the liner notes open.
+  // Opening a record: the desk shrinks, moves aside and tips its top towards us, the record flies onto the turntable
+  // and plays, and its album window opens where the crate card was. Scrolling stays off until the window is closed
+  // (see the modal effect above).
   const openRecord = (id: CoverId) => {
-    if (playing.current || jump.current) return
+    if (jump.current || modal) return
+    stage.hover = ''
+    setModal({ kind: 'record', id })
     const deck = stage.deck
-    if (deck.id === id || matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      Object.assign(deck, { id, drop: 1, arm: 1 })
-      setModal({ kind: 'record', id })
-      return
+    const t = gsap
+      .timeline({ defaults: { ease: 'power2.inOut' } })
+      .to('.overlay', { autoAlpha: 0, duration: 0.25 }, 0)
+      // records go back into the drawer while the desk tips forward (see riseOf in Scene.tsx); the disc leaves its
+      // sleeve at 0.45s, before the sleeve has moved far, and lands on the platter once the table top faces us
+      .to(stage, { album: 1, duration: 1.1, overwrite: 'auto' }, 0.3)
+      .to('.beam', { xPercent: BEAM_ALBUM, duration: 1.1 }, 0.3)
+    if (deck.id !== id) {
+      if (deck.id) t.to(deck, { arm: 0, duration: 0.4 }, 0) // lift the arm off the last record
+      t.call(() => void Object.assign(deck, { id, drop: 0, arm: 0 }), [], 0.45) // the disc leaves its sleeve
+        .to(deck, { drop: 1, duration: 0.9 }, 0.5)
+        .to(deck, { arm: 1, duration: 0.5 }, 1.35)
+        .call(sound.needle, [], 1.85)
     }
-    lenis.current?.stop()
-    stage.hover = id // slides the vinyl half out of its sleeve
-    const p = gsap.timeline({
-      onComplete: () => {
-        playing.current = null
-        setModal({ kind: 'record', id })
-      },
-    })
-    playing.current = p
-    p.to('.overlay', { autoAlpha: 0, duration: 0.3 }, 0)
-    if (deck.id) p.to(deck, { arm: 0, duration: 0.4, ease: 'power2.inOut' }, 0) // lift the arm off the last record
-    p.call(() => {
-      stage.hover = ''
-      Object.assign(deck, { id, drop: 0, arm: 0 }) // the turntable takes the disc from where it is now
-    }, [], 0.45)
-      .to(stage, { play: 1, duration: 1, ease: 'power2.inOut', overwrite: 'auto' }, 0.3)
-      .to(deck, { drop: 1, duration: 0.9, ease: 'power2.inOut' }, 0.5)
-      .to(deck, { arm: 1, duration: 0.5, ease: 'power2.inOut' }, 1.35)
-      .call(sound.needle, [], 1.85)
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) t.progress(1)
   }
-  // Closing keeps the record spinning on the turntable and brings the camera and the crate back.
+  // Closing keeps the record spinning on the turntable and brings the desk and the crate card back.
   const closeRecord = () => {
     setModal(null)
     gsap
-      .timeline()
-      .to(stage, { play: 0, duration: 0.9, ease: 'power2.inOut', overwrite: 'auto' })
-      .to('.overlay', { autoAlpha: 1, duration: 0.4 }, 0.4)
-  }
-  // Previous / Next inside the liner notes: the scene is hidden, so swap the record on the turntable directly.
-  const step = (dir: 1 | -1) => {
-    if (modal?.kind !== 'record') return
-    const i = allRecords.findIndex(r => r.id === modal.id)
-    const id = allRecords[(i + dir + allRecords.length) % allRecords.length].id
-    Object.assign(stage.deck, { id, drop: 1, arm: 1 })
-    setModal({ kind: 'record', id })
+      .timeline({ defaults: { ease: 'power2.inOut' } })
+      .to(stage, { album: 0, duration: 1, overwrite: 'auto' }, 0)
+      .to('.beam', { xPercent: BEAM_SHIFT, duration: 1 }, 0)
+      .to('.overlay', { autoAlpha: 1, duration: 0.35 }, 0.7)
   }
   const toggleSound = () => {
     sound.setEnabled(!soundOn)
     setSoundOn(!soundOn)
   }
   const album = modal?.kind === 'record' ? allRecords.find(r => r.id === modal.id) : undefined
+  const shelf = album && drawers.find(d => d.records.includes(album))!.name
 
   return (
     <>
@@ -284,7 +272,7 @@ export default function App() {
               intro={false}
             />
           </div>
-          <Stage covers={covers} paused={!!modal} onRecord={openRecord} onDrawer={i => go(drawers[i].id)} onFile={() => setModal({ kind: 'file' })} />
+          <Stage covers={covers} paused={modal?.kind === 'file'} onRecord={openRecord} onDrawer={i => go(drawers[i].id)} onFile={() => setModal({ kind: 'file' })} />
 
           <header className="nav">
             <button className="nav__brand" onClick={() => go('desk')} aria-label="Back to the desk">
@@ -413,7 +401,7 @@ export default function App() {
       {modal?.kind === 'file' && <FileSheet onClose={() => setModal(null)} />}
       {album && covers && (
         <Suspense>
-          <RecordModal album={album} cover={covers.get(album.id)!} onClose={closeRecord} onStep={step} />
+          <RecordModal album={album} shelf={shelf!} cover={covers.get(album.id)!} onClose={closeRecord} />
         </Suspense>
       )}
 

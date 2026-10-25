@@ -1,4 +1,5 @@
-// Every fact here comes from the resume. Edit this file to change site content.
+// Every fact about Malhar here comes from the resume; the context around the achievements comes from the events'
+// public listings. Edit this file to change site content.
 
 export const profile = {
   name: 'Malhar Udmale',
@@ -33,14 +34,14 @@ export const profile = {
   photoFocus: [0.31, 0.47] as [number, number],
 }
 
-export type CoverId = 'tickland' | 'sacfm' | 'livelove' | 'atlonglast' | 'wholelotta' | 'dangerous' | 'runnerup'
+export type CoverId = 'awful' | 'starboy' | 'darkage' | 'prom' | 'balloons' | 'thursday' | 'echoes'
 
 export type Album = {
   id: CoverId
   coverTitle: string
   title: string
   meta: string
-  after: { artist: string; album: string; year: number }
+  after: { artist: string; album: string; year?: number }
   tracks: string[]
   credits?: string
   link?: { label: string; href: string }
@@ -61,32 +62,32 @@ export const drawers: Drawer[] = [
     blurb: 'A matching engine in C++20 and the equipment desk for the IIIT Allahabad Student Activity Center.',
     records: [
       {
-        id: 'tickland',
-        coverTitle: 'Tick Land',
+        id: 'awful',
+        coverTitle: "IT'S BEEN LOCK-FREE",
         title: 'Low-Latency Stock Exchange Matching Engine',
         meta: 'C++20, CMake, memory pools, SPSC queues, intrusive data structures, cache-aware design',
-        after: { artist: 'The Weeknd', album: 'Kiss Land', year: 2013 },
+        after: { artist: 'Isaiah Rashad', album: "IT'S BEEN AWFUL" },
         tracks: [
           'A deterministic, header-only C++20 matching engine with price-time priority across multiple symbols. Supports Limit, Market, IOC, FOK, Stop, Iceberg and Post-only orders.',
           'Cut dynamic allocation on the matching path with intrusive FIFO price levels, fixed-capacity memory pools and pre-allocated event storage.',
           'Lock-free SPSC ring buffers with acquire/release ordering and cache-line-separated cursors. Trivially-copyable events, fixed-point prices, -fno-exceptions.',
         ],
         link: { label: 'View the code', href: 'https://github.com/Malhar124/stock-exchange' },
-        label: '#39e58c',
+        label: '#d6351c',
       },
       {
-        id: 'sacfm',
-        coverTitle: 'SAC FM',
+        id: 'starboy',
+        coverTitle: 'SACBOY',
         title: 'Smart SAC: Equipment and Room Management Platform',
         meta: 'React, TypeScript, Node.js, Express, PostgreSQL, Prisma, Zod, SSE, Docker',
-        after: { artist: 'The Weeknd', album: 'Dawn FM', year: 2022 },
+        after: { artist: 'The Weeknd', album: 'Starboy', year: 2016 },
         tracks: [
           'A full-stack platform for the IIIT Allahabad Student Activity Center: live equipment status, 15-minute reservations, room booking, tickets and chat.',
           'A keyboard-first lend and return desk with barcode and webcam scanning.',
           'PostgreSQL schema with Prisma migrations. Borrowing rules (late returns over 30 days, 7-day blocks, overdue checks) live in a service layer; node-cron jobs send reminders and expire holds.',
         ],
         link: { label: 'View the code', href: 'https://github.com/Malhar124/smart-sac' },
-        label: '#2f8fbf',
+        label: '#f2d31b',
       },
     ],
   },
@@ -96,25 +97,25 @@ export const drawers: Drawer[] = [
     blurb: 'Two accepted papers: how refusal works outside English, and segmenting bladder tumours without moving patient data.',
     records: [
       {
-        id: 'livelove',
-        coverTitle: 'LIVE.LOVE.REFUSE',
+        id: 'darkage',
+        coverTitle: 'LITTLE DARK ABLATION',
         title: 'Refusal Behavior Beyond English: A Multilingual Study of Representation Directions',
         meta: 'Co-author. Epistemic Intelligence in Machine Learning Workshop, ICML 2026. Accepted May 2026.',
-        after: { artist: 'A$AP Rocky', album: 'LIVE.LOVE.A$AP', year: 2011 },
+        after: { artist: 'MGMT', album: 'Little Dark Age', year: 2018 },
         tracks: [
           'Prior work claims LLM refusal is controlled by one universal direction, but tests it only in English. We tested it on English and 5 Indian languages with Qwen 7B, 14B and 32B.',
           'Built IndicRefuse (6 languages). Ablated a refusal direction per language and scored outputs with a GPT-4o-mini judge.',
           'Ablation removes refusal tokens but yields little harmful compliance in Indic languages (Qwen2-7B Gujarati: refusal 0.34 to 0.02, compliance 0.12). Larger models resist more.',
         ],
         link: { label: 'Read on OpenReview', href: 'https://openreview.net/forum?id=txckkJNTVF' },
-        label: '#ff5ca8',
+        label: '#f4d64e',
       },
       {
-        id: 'atlonglast',
-        coverTitle: 'AT.LONG.LAST.FEDAVG',
+        id: 'prom',
+        coverTitle: 'ALONE AT EACH SITE',
         title: 'Federated Multi-Task Learning for Bladder Tumor Segmentation and MIBC Classification Using a Hybrid CNN-Transformer Architecture',
         meta: 'Co-first author. International Conference on Computer Vision and Image Processing (CVIP 2026). Accepted 2026.',
-        after: { artist: 'A$AP Rocky', album: 'AT.LONG.LAST.A$AP', year: 2015 },
+        after: { artist: 'Tory Lanez', album: 'Alone at Prom', year: 2021 },
         tracks: [
           'A FedAvg framework (Flower) across 4 clinical centers on FedBCa: 275 T2-weighted MRI scans.',
           'Designed Swin Hybrid: a ResNet-34 + Swin-Tiny encoder with segmentation-guided attention pooling.',
@@ -122,41 +123,53 @@ export const drawers: Drawer[] = [
           'Joint segmentation and MIBC staging in one model: tumour localisation guides the staging decision.',
         ],
         link: { label: 'Conference site', href: 'https://cvip2026.nitc.ac.in/index.html' },
-        label: '#cfcfcf',
+        label: '#f0a48c',
       },
     ],
   },
   {
     id: 'achievements',
     name: 'Achievements',
-    blurb: 'Three hackathon and challenge results from 2026.',
+    blurb: 'Top 8 of 1 lakh+ teams at Adobe, 95.8% in Amazon’s ML Challenge, and runner-up at Sarvam AI.',
     records: [
       {
-        id: 'wholelotta',
-        coverTitle: 'Top 8',
+        id: 'balloons',
+        coverTitle: 'HOUSE OF ADOBE',
         title: 'Adobe University Hackathon 2026',
-        meta: 'Top 8 out of 1 lakh+ teams',
-        after: { artist: 'Playboi Carti', album: 'Whole Lotta Red', year: 2020 },
-        tracks: ['Built a tool that finds website severities and flags them for AI discoverability.'],
-        label: '#d8141c',
+        meta: 'Top 8 of 1 lakh+ teams',
+        after: { artist: 'The Weeknd', album: 'House of Balloons', year: 2011 },
+        tracks: [
+          'Finished in the top 8 out of more than 1 lakh teams.',
+          'More and more people ask AI assistants instead of searching, and a website those assistants can’t read well stops being found.',
+          'Built a tool that audits a website, ranks what is wrong with it by severity, and flags the issues that hurt its discoverability by AI.',
+        ],
+        label: '#e4e4e4',
       },
       {
-        id: 'dangerous',
-        coverTitle: 'DANGEROUSLY ACCURATE',
+        id: 'thursday',
+        coverTitle: 'DEADLINE',
         title: 'Amazon ML Challenge 2026',
-        meta: 'Scored 95.8%',
-        after: { artist: 'Yeat', album: 'DANGEROUS SUMMER', year: 2025 },
-        tracks: ['Scored 95.8% in the Amazon ML Challenge 2026.'],
-        label: '#f6d808',
+        meta: 'Scored 95.8% in a 72-hour ML hackathon',
+        after: { artist: 'The Weeknd', album: 'Thursday', year: 2011 },
+        tracks: [
+          'Amazon’s 72-hour machine learning hackathon for students across India: a real Amazon dataset and a real-world problem, both revealed only on day one.',
+          'Every submission is scored on a live leaderboard, with a limited number of tries.',
+          'Scored 95.8%, building and tuning the model against the clock.',
+        ],
+        label: '#ef6a1f',
       },
       {
-        id: 'runnerup',
-        coverTitle: 'RUNNER UP',
+        id: 'echoes',
+        coverTitle: 'ECHOES OF SPEECH',
         title: 'Sarvam AI Campus Hackathon',
-        meta: "Runner's up",
-        after: { artist: 'Travis Scott', album: 'Rodeo', year: 2015 },
-        tracks: ['Built a multilingual voice agent for blind people.'],
-        label: '#d4a73a',
+        meta: 'Runner-up',
+        after: { artist: 'The Weeknd', album: 'Echoes of Silence', year: 2011 },
+        tracks: [
+          'Runner-up at the campus hackathon run by Sarvam AI, which builds speech and language models for Indian languages.',
+          'Built a voice agent for blind people: you speak to it and it speaks back, so nothing depends on seeing a screen.',
+          'Multilingual from the start, so it serves people in their own language, not only in English.',
+        ],
+        label: '#c1121f',
       },
     ],
   },
