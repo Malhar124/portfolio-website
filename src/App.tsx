@@ -178,6 +178,10 @@ export default function App() {
     const others = gsap.utils.toArray<HTMLElement>('.hero, .front-hint, .crate, .contact').filter(el => el !== overlay)
     const closing = stage.drawers.filter((d, i) => i !== target && (d.open > 0.001 || d.rise > 0.001))
     const finish = () => {
+      // A scrub still settling from the last scroll was only paused by disable(). Finish it first: left paused, the
+      // next scroll update plays it out and puts the scene back where that scroll was heading, so the drawer would
+      // shut and open a second time.
+      st.getTween()?.progress(1)
       tl.progress(tl.labels[label] / tl.duration()) // the exact state this scroll position maps to
       st.enable(false, false)
       l.start()
