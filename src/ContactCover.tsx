@@ -212,7 +212,7 @@ function paint(c: HTMLCanvasElement) {
   // bottom right: a short bar and the title in small type
   x.fillStyle = INK
   x.fillRect(566 * k, 600 * k, 50 * k, 4 * k)
-  text(x, 'House Of Balloons', 616 * k, 615 * k, `600 ${6.5 * k}px Archivo`, INK, { align: 'right' })
+  text(x, 'Contacts', 616 * k, 615 * k, `600 ${6.5 * k}px Archivo`, INK, { align: 'right' })
   grain(x, 0.08)
 }
 

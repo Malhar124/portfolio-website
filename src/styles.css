@@ -950,9 +950,11 @@ a {
   font-style: italic;
 }
 
+/* a sturdy condensed grotesque, as on a record sleeve: the titles run long and sit on dark glass */
 .liner__notes h2 {
   margin: 18px 0 12px;
-  font: italic 500 clamp(28px, 3vw, 44px)/1.08 var(--serif);
+  font: 600 semi-condensed clamp(26px, 2.6vw, 38px)/1.12 Archivo, var(--sans);
+  letter-spacing: -0.01em;
   text-wrap: balance;
 }
 
