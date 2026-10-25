@@ -112,7 +112,7 @@ function paint(c: HTMLCanvasElement) {
     x.fillStyle = `rgb(${v},${v},${v})`
     x.fillRect((20 + i * 28.25) * k, 102 * k, 28.25 * k + 0.5, 28 * k)
   }
-  text(x, 'HouseOfBalloons', 253 * k, 130 * k, `800 ${37 * k}px Archivo`, INK, { spacing: -1.2 * k, fit: 365 * k })
+  text(x, 'Contacts', 253 * k, 130 * k, `800 ${37 * k}px Archivo`, INK, { spacing: -1.2 * k, fit: 365 * k })
   x.fillStyle = INK
   x.fillRect(20 * k, 135 * k, 600 * k, 1.1 * k)
 
