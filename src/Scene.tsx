@@ -1,4 +1,4 @@
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
+import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Environment, Lightformer, RoundedBox, Sparkles } from '@react-three/drei'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
@@ -19,15 +19,14 @@ const DRAWER_Y = [0.48, 0, -0.48]
 const FRONT = D / 2
 const REC = 0.82
 const PULL = 0.95 // how far a drawer slides out
-const PHOTO = [0.48, 0.64] as const
-// Table-top x positions. On tall screens the props are turned 90° and laid out by depth, so they space differently.
-const LAYOUT = {
-  landscape: { frame: -1.27, deck: -0.29, file: 0.88 },
-  portrait: { frame: -1.22, deck: -0.3, file: 0.95 },
-}
+const PHOTO = [0.36, 0.48] as const
+// Table-top layout: [x across the desk, z from the back (-) to the front (+)]. The speaker sits low at the front left
+// so the photo, standing behind it, still shows above it.
+const LAYOUT = { frame: [-1.25, -0.4], speaker: [-1.2, 0.3], deck: -0.29, file: 0.88 } as const
 // Turntable, in its own space: platter centre, tonearm pivot, and how far the arm swings to reach the record.
 const DECK = { px: -0.13, pz: 0.02, pivot: [0.42, 0.15, -0.27] as const, swing: 0.53 }
-// how far the table top tips towards the camera while an album is open (radians from upright)
+// how far the table top tips towards the camera (radians from upright): the opening view, and again while an album
+// is open
 const TOP_FRONT = 0.78
 const UP = new THREE.Vector3(0, 1, 0)
 const { lerp, clamp, smoothstep, damp } = THREE.MathUtils
@@ -124,8 +123,9 @@ function Rig(props: Props) {
     const a = stage.album
     const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2))
     const fit = (w: number, h: number) => Math.max(h / 2 / tan, w / 2 / (tan * aspect))
-    // top view frames the table top; front view leaves room for records rising above the desk
-    const dTop = (portrait ? fit(1.8, 3.5) : fit(3.5, 1.85)) + SURFACE
+    // the opening view frames the table top and what stands on it; the front view leaves room for records rising
+    // above the desk
+    const dTop = portrait ? fit(3.7, 3.4) : fit(5.4, 4)
     const dFront = portrait ? fit(3.9, 6.2) : fit(7.8, 4.4)
     const baseDist = lerp(dTop, dFront, t) + stage.outro * 1.2
     const visW = 2 * tan * aspect * baseDist
@@ -133,12 +133,10 @@ function Rig(props: Props) {
 
     look.current.x = damp(look.current.x, pointer.x, 3, dt)
     look.current.y = damp(look.current.y, pointer.y, 3, dt)
-    // front view while browsing; with an album open, tipped towards the camera so the record can be seen playing
-    inner.current.rotation.x = lerp(lerp(Math.PI / 2, 0.16, t), TOP_FRONT, a) - look.current.y * 0.035
+    // top-front to start, the front for the drawers, and top-front again with an album open so the record is seen playing
+    inner.current.rotation.x = lerp(lerp(TOP_FRONT, 0.16, t), TOP_FRONT, a) - look.current.y * 0.035
     // at the contact section the desk turns to face the card
     inner.current.rotation.y = look.current.x * 0.06 + stage.outro * (portrait ? 0.3 : 0.45)
-    // on tall screens the desk starts rolled 90° so its long side runs down the screen
-    outer.current.rotation.z = portrait ? -(Math.PI / 2) * (1 - t) : 0
 
     cam.position.set(0, 0, baseDist)
     cam.lookAt(0, 0, 0)
@@ -265,7 +263,7 @@ function Drawer({ index, label, m, onOpen }: { index: number; label: string; m: 
   useFrame((_, dt) => {
     const open = openOf(stage.drawers[index])
     // a closed drawer slides out a touch under the pointer, inviting the click
-    peek.current = damp(peek.current, stage.hover === id && open < 0.05 && stage.turn > 0.9 ? 0.07 : 0, 10, dt)
+    peek.current = damp(peek.current, stage.hover === id && open < 0.05 ? 0.07 : 0, 10, dt)
     g.current.position.z = open * PULL + peek.current
     // one slide sound each time the drawer starts moving
     const mo = motion.current
@@ -285,10 +283,9 @@ function Drawer({ index, label, m, onOpen }: { index: number; label: string; m: 
         material={m.fronts[index]}
         castShadow
         receiveShadow
-        onPointerOver={e => stage.turn > 0.9 && hover(id)(e)}
+        onPointerOver={hover(id)}
         onPointerOut={unhover(id)}
         onClick={e => {
-          if (stage.turn < 0.9) return
           e.stopPropagation()
           onOpen()
         }}
@@ -539,10 +536,6 @@ function TopProps({ m, vinyls, onFile }: { m: Mats; vinyls: Vinyls; onFile: () =
   const dossier = useMemo(dossierTexture, [])
   const [photo, setPhoto] = useState<THREE.Texture>(photoPlaceholder)
   useEffect(() => photoTexture(profile.photo, PHOTO[0] / PHOTO[1], setPhoto), [])
-  const portrait = useThree(s => s.size.width / s.size.height < 0.9)
-  // when the desk is rolled for tall screens, turn the props so they still read upright
-  const rot = portrait ? Math.PI / 2 : 0
-  const at = portrait ? LAYOUT.portrait : LAYOUT.landscape
 
   useFrame((_, dt) => {
     lift.current = damp(lift.current, stage.hover === 'file' && stage.turn < 0.2 ? 1 : 0, 10, dt)
@@ -551,25 +544,34 @@ function TopProps({ m, vinyls, onFile }: { m: Mats; vinyls: Vinyls; onFile: () =
 
   return (
     <group position-y={SURFACE}>
-      <group position-x={at.frame} rotation-y={rot + 0.05}>
-        <RoundedBox args={[0.7, 0.05, 0.88]} radius={0.012} smoothness={3} position-y={0.025} material={m.frame} castShadow receiveShadow />
-        <mesh position-y={0.052} rotation-x={-Math.PI / 2} receiveShadow>
-          <planeGeometry args={[0.6, 0.78]} />
-          <meshStandardMaterial color="#ece2cf" roughness={0.9} />
-        </mesh>
-        <mesh position-y={0.054} rotation-x={-Math.PI / 2}>
-          <planeGeometry args={PHOTO} />
-          <meshStandardMaterial map={photo} roughness={0.6} />
-        </mesh>
-        <mesh position-y={0.057} rotation-x={-Math.PI / 2}>
-          <planeGeometry args={[0.62, 0.8]} />
-          <meshPhysicalMaterial transparent opacity={0.1} roughness={0.04} clearcoat={1} color="#ffffff" />
+      {/* the photo, standing on an easel back behind the speaker */}
+      <group position={[LAYOUT.frame[0], 0, LAYOUT.frame[1]]} rotation-y={0.2}>
+        <group position-y={0.31} rotation-x={-0.2}>
+          <RoundedBox args={[0.5, 0.62, 0.04]} radius={0.012} smoothness={3} material={m.frame} castShadow receiveShadow />
+          <mesh position-z={0.021} receiveShadow>
+            <planeGeometry args={[0.42, 0.54]} />
+            <meshStandardMaterial color="#ece2cf" roughness={0.9} />
+          </mesh>
+          <mesh position-z={0.022}>
+            <planeGeometry args={PHOTO} />
+            <meshStandardMaterial map={photo} roughness={0.6} />
+          </mesh>
+          <mesh position-z={0.024}>
+            <planeGeometry args={[0.44, 0.56]} />
+            <meshPhysicalMaterial transparent opacity={0.1} roughness={0.04} clearcoat={1} color="#ffffff" />
+          </mesh>
+        </group>
+        <mesh position={[0, 0.17, -0.13]} rotation-x={0.42} material={m.frame} castShadow>
+          <boxGeometry args={[0.04, 0.38, 0.02]} />
         </mesh>
       </group>
-      <group position-x={at.deck} rotation-y={rot}>
+      <group position={[LAYOUT.speaker[0], 0, LAYOUT.speaker[1]]} rotation-y={0.28}>
+        <Speaker m={m} />
+      </group>
+      <group position-x={LAYOUT.deck}>
         <Turntable m={m} vinyls={vinyls} />
       </group>
-      <group position={[at.file, 0, 0.02]} rotation-y={rot - 0.035}>
+      <group position={[LAYOUT.file, 0, 0.02]} rotation-y={-0.035}>
         <group
           ref={file}
           onPointerOver={e => stage.turn < 0.2 && hover('file')(e)}
@@ -592,6 +594,64 @@ function TopProps({ m, vinyls, onFile }: { m: Mats; vinyls: Vinyls; onFile: () =
           </mesh>
         </group>
       </group>
+    </group>
+  )
+}
+
+// A low mid-century speaker: walnut cabinet, an exposed woofer in a brass ring, a tweeter, a volume knob and a pilot
+// light. It is where the record's music comes out, so the woofer pumps with the music and the light is on while it
+// plays.
+function Speaker({ m }: { m: Mats }) {
+  const cone = useRef<THREE.Group>(null!)
+  const pilot = useRef<THREE.MeshStandardMaterial>(null!)
+  const pump = useRef(0)
+  useFrame((_, dt) => {
+    pump.current = damp(pump.current, sound.level(), 20, dt)
+    cone.current.position.z = 0.142 + pump.current * 0.02
+    pilot.current.emissiveIntensity = sound.playing ? 2.2 : 0
+  })
+  const front = 0.14 // the cabinet's front face, from its centre
+  return (
+    <group position-y={0.2}>
+      <RoundedBox args={[0.6, 0.36, 0.28]} radius={0.03} smoothness={3} material={m.fronts[1]} castShadow receiveShadow />
+      <mesh position={[0, 0, front + 0.001]}>
+        <planeGeometry args={[0.54, 0.3]} />
+        <meshStandardMaterial color="#17110c" roughness={0.9} />
+      </mesh>
+      <group position={[-0.11, 0.005, 0]}>
+        <mesh position-z={front + 0.006} material={m.brass}>
+          <torusGeometry args={[0.122, 0.009, 12, 48]} />
+        </mesh>
+        <mesh position-z={front + 0.004} rotation-x={Math.PI / 2} material={m.rubber}>
+          <cylinderGeometry args={[0.116, 0.116, 0.006, 48]} />
+        </mesh>
+        <group ref={cone}>
+          <mesh rotation-x={-Math.PI / 2}>
+            <coneGeometry args={[0.1, 0.035, 48, 1, true]} />
+            <meshStandardMaterial color="#1c1a19" roughness={0.85} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position-z={-0.012} scale-z={0.5}>
+            <sphereGeometry args={[0.034, 24, 12]} />
+            <meshStandardMaterial color="#2a2624" roughness={0.6} />
+          </mesh>
+        </group>
+      </group>
+      <group position={[0.17, 0.07, front + 0.004]}>
+        <mesh material={m.brass}>
+          <torusGeometry args={[0.04, 0.006, 10, 32]} />
+        </mesh>
+        <mesh scale-z={0.45}>
+          <sphereGeometry args={[0.033, 20, 10]} />
+          <meshStandardMaterial color="#141210" roughness={0.4} />
+        </mesh>
+      </group>
+      <mesh position={[0.17, -0.08, front + 0.012]} rotation-x={Math.PI / 2} material={m.brass} castShadow>
+        <cylinderGeometry args={[0.028, 0.03, 0.022, 24]} />
+      </mesh>
+      <mesh position={[0.24, -0.08, front + 0.004]}>
+        <sphereGeometry args={[0.008, 10, 8]} />
+        <meshStandardMaterial ref={pilot} color="#3a1a06" emissive="#ffa040" emissiveIntensity={0} />
+      </mesh>
     </group>
   )
 }

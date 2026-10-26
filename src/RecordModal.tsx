@@ -64,8 +64,7 @@ export default function RecordModal({ album, shelf, cover, onClose }: Props) {
         .from('.album__notes > *', { y: 14, autoAlpha: 0, stagger: 0.05, duration: 0.5 }, 0.2)
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) t.progress(1)
     }, dialog)
-    // shortcut: on resize the window reflows but the glass keeps its old snapshot until reopened; fine for a dialog
-    // that is open for seconds, revisit if the window ever stays up across layout changes.
+    // keep the banner, and the snapshot the glass refracts, in step with the layout
     const resize = () => paintGlow(true)
     addEventListener('resize', resize)
     return () => {

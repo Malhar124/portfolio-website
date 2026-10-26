@@ -1,18 +1,50 @@
-// Opt-in sound, synthesised with Web Audio so there are no audio files to download. Nothing plays until the visitor
-// turns sound on, and the audio context is only ever created from a click or key press (setEnabled / unlock), since
-// browsers refuse to start audio before a user gesture. The choice is remembered per browser.
+// Sound effects synthesised with Web Audio, plus the record's music. Nothing plays until the visitor turns sound on
+// or puts a record on the turntable, and the audio context is only ever created from a click or key press
+// (setEnabled / unlock / cue), since browsers refuse to start audio before a user gesture. The choice is remembered
+// per browser, and a visitor who turned sound off keeps it off: records then play silently.
 const KEY = 'sound'
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let crackle: AudioBufferSourceNode | null = null
 let wantCrackle = false
-let enabled = (() => {
+const stored = (() => {
   try {
-    return localStorage.getItem(KEY) === 'on'
+    return localStorage.getItem(KEY)
   } catch {
-    return false
+    return null
   }
 })()
+let enabled = stored === 'on'
+let muted = stored === 'off'
+
+// The record's music, at half volume. It runs through Web Audio rather than playing on its own: iOS ignores an
+// audio element's volume, and the speaker on the desk follows its level.
+const TRACK = encodeURI('/PLASTIC LOVE - instrumental -.mp3')
+const VOLUME = 0.5
+let track: HTMLAudioElement | null = null
+let trackGain: GainNode | null = null
+let meter: AnalyserNode | null = null
+const wave = new Uint8Array(256)
+
+function music() {
+  const a = audio()
+  if (!track) {
+    track = new Audio(TRACK)
+    trackGain = a.createGain()
+    meter = a.createAnalyser()
+    meter.fftSize = wave.length
+    a.createMediaElementSource(track).connect(trackGain).connect(meter).connect(a.destination)
+  }
+  return track
+}
+
+// turning sound back on while a record is on the platter carries on where the music was
+function resumeMusic() {
+  if (!wantCrackle || track?.ended) return
+  music()
+  trackGain!.gain.value = VOLUME
+  void track!.play().catch(() => {})
+}
 
 function audio() {
   if (!ctx) {
@@ -92,6 +124,7 @@ export const sound = {
   },
   setEnabled(on: boolean) {
     enabled = on
+    muted = !on
     try {
       localStorage.setItem(KEY, on ? 'on' : 'off')
     } catch {
@@ -100,7 +133,32 @@ export const sound = {
     if (on) {
       audio()
       startCrackle()
-    } else stopCrackle()
+      resumeMusic()
+    } else {
+      stopCrackle()
+      track?.pause()
+    }
+  },
+  // A record is going on the turntable; call from the click that chose it. Turns sound on unless the visitor turned
+  // it off, and starts the track silently now, because browsers only let audio start from a click and the needle
+  // lands a moment later (see needle()).
+  cue() {
+    if (muted) return
+    if (!enabled) this.setEnabled(true)
+    const t = music()
+    trackGain!.gain.value = 0
+    void t.play().catch(() => {})
+  },
+  get playing() {
+    return !!track && !track.paused && !track.ended
+  },
+  // how loud the music is right now, from 0 to about 1, for the speaker's woofer
+  level() {
+    if (!meter || !this.playing) return 0
+    meter.getByteTimeDomainData(wave)
+    let sum = 0
+    for (const v of wave) sum += (v - 128) ** 2
+    return Math.min(1, Math.sqrt(sum / wave.length) / 12) // music at half volume sits around 6 to 12 of 128
   },
   // call from any user gesture so a remembered "on" can start the audio context
   unlock() {
@@ -121,9 +179,14 @@ export const sound = {
     })
     if (!out) setTimeout(() => enabled && thump(90, 0.12, 0.35), 420)
   },
-  // needle meets record: a soft thump and a burst of crackle
+  // needle meets record: a soft thump, a burst of crackle, and the track from the top
   needle() {
     if (!enabled || !ctx) return
+    if (track) {
+      track.currentTime = 0
+      trackGain!.gain.setValueAtTime(VOLUME, ctx.currentTime)
+      if (track.paused) void track.play().catch(() => {})
+    }
     thump(70, 0.18, 0.45)
     const buf = noise(0.35, (i, n) => (Math.random() - 0.5) * (1 - i / n) * (Math.random() < 0.02 ? 1.5 : 0.15))
     play(buf, 0.5, f => {
