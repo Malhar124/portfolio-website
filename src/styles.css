@@ -165,7 +165,7 @@ a {
 
 .nav__brand {
   min-height: 44px;
-  font: italic 500 22px var(--serif);
+  font: italic 500 clamp(26px, 2.2vw, 32px) var(--serif);
   color: var(--parchment);
 }
 
