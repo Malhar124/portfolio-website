@@ -219,7 +219,7 @@ export default function App() {
       .to(stage, { album: 1, duration: 1.1, overwrite: 'auto' }, 0.3)
       .to('.beam', { xPercent: BEAM_ALBUM, duration: 1.1 }, 0.3)
     if (deck.id !== id) {
-      sound.cue() // in the click itself, so the browser lets the music start when the needle lands
+      sound.cue(allRecords.find(r => r.id === id)!.song.file) // in the click itself, so the browser lets the music start when the needle lands
       setSoundOn(sound.enabled)
       if (deck.id) t.to(deck, { arm: 0, duration: 0.4 }, 0) // lift the arm off the last record
       t.call(() => void Object.assign(deck, { id, drop: 0, arm: 0 }), [], 0.45) // the disc leaves its sleeve

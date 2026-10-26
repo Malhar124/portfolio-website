@@ -125,6 +125,7 @@ export default function RecordModal({ album, shelf, cover, onClose }: Props) {
               {album.after.year && ` (${album.after.year})`}
             </span>
           </p>
+          <p className="album__song">This record plays “{album.song.title}”, instrumental.</p>
           <h2 id="album-title">{album.title}</h2>
           <p className="album__meta">{album.meta}</p>
           <ol className="album__tracks">

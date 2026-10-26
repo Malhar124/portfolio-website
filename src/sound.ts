@@ -17,10 +17,10 @@ const stored = (() => {
 let enabled = stored === 'on'
 let muted = stored === 'off'
 
-// The record's music, at half volume. It runs through Web Audio rather than playing on its own: iOS ignores an
-// audio element's volume, and the speaker on the desk follows its level.
-const TRACK = encodeURI('/PLASTIC LOVE - instrumental -.mp3')
+// The record's music: a song from the album its sleeve is after, at half volume. It runs through Web Audio rather
+// than playing on its own: iOS ignores an audio element's volume, and the speaker on the desk follows its level.
 const VOLUME = 0.5
+let song = '' // the song of the record on the turntable, kept even while muted so turning sound on can play it
 let track: HTMLAudioElement | null = null
 let trackGain: GainNode | null = null
 let meter: AnalyserNode | null = null
@@ -29,18 +29,19 @@ const wave = new Uint8Array(256)
 function music() {
   const a = audio()
   if (!track) {
-    track = new Audio(TRACK)
+    track = new Audio()
     trackGain = a.createGain()
     meter = a.createAnalyser()
     meter.fftSize = wave.length
     a.createMediaElementSource(track).connect(trackGain).connect(meter).connect(a.destination)
   }
+  if (song && track.getAttribute('src') !== song) track.src = song
   return track
 }
 
 // turning sound back on while a record is on the platter carries on where the music was
 function resumeMusic() {
-  if (!wantCrackle || track?.ended) return
+  if (!wantCrackle || !song || (track?.ended && track.getAttribute('src') === song)) return
   music()
   trackGain!.gain.value = VOLUME
   void track!.play().catch(() => {})
@@ -142,7 +143,8 @@ export const sound = {
   // A record is going on the turntable; call from the click that chose it. Turns sound on unless the visitor turned
   // it off, and starts the track silently now, because browsers only let audio start from a click and the needle
   // lands a moment later (see needle()).
-  cue() {
+  cue(file: string) {
+    song = encodeURI(file)
     if (muted) return
     if (!enabled) this.setEnabled(true)
     const t = music()

@@ -42,6 +42,7 @@ export type Album = {
   title: string
   meta: string
   after: { artist: string; album: string; year?: number }
+  song: { title: string; file: string } // an instrumental from that same album, played when the record goes on
   tracks: string[]
   credits?: string
   link?: { label: string; href: string }
@@ -67,6 +68,7 @@ export const drawers: Drawer[] = [
         title: 'Low-Latency Stock Exchange Matching Engine',
         meta: 'C++20, CMake, memory pools, SPSC queues, intrusive data structures, cache-aware design',
         after: { artist: 'Isaiah Rashad', album: "IT'S BEEN AWFUL" },
+        song: { title: 'SUPAFICIAL', file: '/d1/Isaiah Rashad - SUPAFICIAL (Instrumental).mp3' },
         tracks: [
           'A deterministic, header-only C++20 matching engine with price-time priority across multiple symbols. Supports Limit, Market, IOC, FOK, Stop, Iceberg and Post-only orders.',
           'Cut dynamic allocation on the matching path with intrusive FIFO price levels, fixed-capacity memory pools and pre-allocated event storage.',
@@ -81,6 +83,7 @@ export const drawers: Drawer[] = [
         title: 'Smart SAC: Equipment and Room Management Platform',
         meta: 'React, TypeScript, Node.js, Express, PostgreSQL, Prisma, Zod, SSE, Docker',
         after: { artist: 'The Weeknd', album: 'Starboy', year: 2016 },
+        song: { title: 'Secrets', file: '/d1/The Weeknd Secrets Instrumental Original.mp3' },
         tracks: [
           'A full-stack platform for the IIIT Allahabad Student Activity Center: live equipment status, 15-minute reservations, room booking, tickets and chat.',
           'A keyboard-first lend and return desk with barcode and webcam scanning.',
@@ -102,6 +105,7 @@ export const drawers: Drawer[] = [
         title: 'Refusal Behavior Beyond English: A Multilingual Study of Representation Directions',
         meta: 'Co-author. Epistemic Intelligence in Machine Learning Workshop, ICML 2026. Accepted May 2026.',
         after: { artist: 'MGMT', album: 'Little Dark Age', year: 2018 },
+        song: { title: 'Me and Michael', file: '/d2/MGMT - Me and Michael (Instrumental).mp3' },
         tracks: [
           'Prior work claims LLM refusal is controlled by one universal direction, but tests it only in English. We tested it on English and 5 Indian languages with Qwen 7B, 14B and 32B.',
           'Built IndicRefuse (6 languages). Ablated a refusal direction per language and scored outputs with a GPT-4o-mini judge.',
@@ -116,6 +120,7 @@ export const drawers: Drawer[] = [
         title: 'Federated Multi-Task Learning for Bladder Tumor Segmentation and MIBC Classification Using a Hybrid CNN-Transformer Architecture',
         meta: 'Co-first author. International Conference on Computer Vision and Image Processing (CVIP 2026). Accepted 2026.',
         after: { artist: 'Tory Lanez', album: 'Alone at Prom', year: 2021 },
+        song: { title: 'The Color Violet', file: '/d2/Tory Lanez - The Color Violet (Instrumental).mp3' },
         tracks: [
           'A FedAvg framework (Flower) across 4 clinical centers on FedBCa: 275 T2-weighted MRI scans.',
           'Designed Swin Hybrid: a ResNet-34 + Swin-Tiny encoder with segmentation-guided attention pooling.',
@@ -138,6 +143,7 @@ export const drawers: Drawer[] = [
         title: 'Adobe University Hackathon 2026',
         meta: 'Top 8 of 1 lakh+ teams',
         after: { artist: 'The Weeknd', album: 'House of Balloons', year: 2011 },
+        song: { title: 'The Party & The After Party', file: '/d3/The Weeknd The Party & The After Party Instrumental Original.mp3' },
         tracks: [
           'Finished in the top 8 out of more than 1 lakh teams.',
           'More and more people ask AI assistants instead of searching, and a website those assistants can’t read well stops being found.',
@@ -151,6 +157,7 @@ export const drawers: Drawer[] = [
         title: 'Amazon ML Challenge 2026',
         meta: 'Scored 95.8% in a 72-hour ML hackathon',
         after: { artist: 'The Weeknd', album: 'Thursday', year: 2011 },
+        song: { title: 'Life of the Party', file: '/d3/The Weeknd Life of the Party Instrumental Original.mp3' },
         tracks: [
           'Amazon’s 72-hour machine learning hackathon for students across India: a real Amazon dataset and a real-world problem, both revealed only on day one.',
           'Every submission is scored on a live leaderboard, with a limited number of tries.',
@@ -164,6 +171,7 @@ export const drawers: Drawer[] = [
         title: 'Sarvam AI Campus Hackathon',
         meta: 'Runner-up',
         after: { artist: 'The Weeknd', album: 'Echoes of Silence', year: 2011 },
+        song: { title: 'XO / The Host', file: '/d3/The Weeknd XO The Host Instrumental Original.mp3' },
         tracks: [
           'Runner-up at the campus hackathon run by Sarvam AI, which builds speech and language models for Indian languages.',
           'Built a voice agent for blind people: you speak to it and it speaks back, so nothing depends on seeing a screen.',
