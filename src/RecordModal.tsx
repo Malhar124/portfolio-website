@@ -112,7 +112,7 @@ export default function RecordModal({ album, shelf, cover, onClose }: Props) {
             </div>
           </div>
           <div className="album__actions">
-            <Glass snapshot={snapshot} text="Close" onPress={close} />
+            <Glass snapshot={snapshot} text="Back" onPress={close} />
             {album.link && <Glass snapshot={snapshot} text={album.link.label} role="link" onPress={() => window.open(album.link!.href, '_blank', 'noopener')} />}
           </div>
         </div>

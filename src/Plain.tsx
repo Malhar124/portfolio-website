@@ -14,8 +14,13 @@ export default function Plain() {
   return (
     <div className="plain">
       <nav className="plain__top" aria-label="Page">
-        <a href="#">Take the tour</a>
-        <a href={profile.resume} target="_blank" rel="noreferrer">
+        <a className="chip" href="#">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M10 3.5 5.5 8l4.5 4.5" />
+          </svg>
+          Back to the tour
+        </a>
+        <a className="chip" href={profile.resume} target="_blank" rel="noreferrer">
           Résumé (PDF)
         </a>
       </nav>

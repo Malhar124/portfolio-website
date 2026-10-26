@@ -44,6 +44,8 @@ const SECTIONS = [
   ['contact', 'Contact'],
 ] as const
 type Section = 'desk' | (typeof SECTIONS)[number][0]
+// where go() can take the tour: a section, or the front of the desk with every drawer shut
+type Stop = Section | 'front'
 const sectionAt = (t: number): Section =>
   t < 1.4 ? 'desk' : t < 3.4 ? 'projects' : t < 5.4 ? 'research' : t < 7.4 ? 'achievements' : 'contact'
 
@@ -102,6 +104,7 @@ export default function App() {
         .to('.hero', { autoAlpha: 0, y: -16, duration: 0.25 }, 0.05)
         .to(stage, { turn: 1, duration: 1.1, ease: 'power2.inOut' }, 0)
         .fromTo('.front-hint', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15 }, 1.05)
+        .addLabel('front', 1.3) // facing the drawers, all shut: where closing a drawer goes back to
         .to('.front-hint', { autoAlpha: 0, duration: 0.12 }, CHAPTER[0] - 0.05)
         .to(stage, { shift: 1, duration: 0.5, ease: 'power2.inOut' }, CHAPTER[0])
         // the lamp follows the desk when it slides aside: 17% of the screen, and the beam layer is 140% wide
@@ -162,7 +165,7 @@ export default function App() {
   // Clicking a drawer or nav link goes straight there. Scrolling would play every chapter in between, so instead:
   // pause the scroll timeline, jump the page invisibly, animate only what changes (put the current records and
   // drawer away, then open the clicked one), and hand control back to the scroll timeline at the same state.
-  const go = (label: Section) => {
+  const go = (label: Stop) => {
     const tl = timeline.current
     const st = tl?.scrollTrigger
     const l = lenis.current
@@ -171,10 +174,13 @@ export default function App() {
     st.disable(false)
     l.stop()
     l.scrollTo(st.labelToScroll(label), { immediate: true, force: true })
-    setActive(label)
+    setActive(label === 'front' ? 'desk' : label)
 
     const target = drawers.findIndex(d => d.id === label)
-    const overlay = document.querySelector<HTMLElement>(label === 'desk' ? '.hero' : label === 'contact' ? '.contact' : `#crate-${label}`)!
+    const aside = label !== 'desk' && label !== 'front' // the desk slides aside for a crate card or the contact sleeve
+    const overlay = document.querySelector<HTMLElement>(
+      label === 'desk' ? '.hero' : label === 'front' ? '.front-hint' : label === 'contact' ? '.contact' : `#crate-${label}`,
+    )!
     const others = gsap.utils.toArray<HTMLElement>('.hero, .front-hint, .crate, .contact').filter(el => el !== overlay)
     const closing = stage.drawers.filter((d, i) => i !== target && (d.open > 0.001 || d.rise > 0.001))
     const finish = () => {
@@ -192,8 +198,8 @@ export default function App() {
     j.to(others, { autoAlpha: 0, duration: 0.25 }, 0)
     // records go back in before their drawer closes, so they never cut through the wood
     if (closing.length) j.to(closing, { rise: 0, duration: 0.35, ease: 'power1.in' }, 0).to(closing, { open: 0, duration: 0.3, ease: 'power2.in' })
-    j.to(stage, { turn: label === 'desk' ? 0 : 1, shift: label === 'desk' ? 0 : 1, outro: label === 'contact' ? 1 : 0, duration: 0.9, ease: 'power2.inOut' }, closing.length ? 0.3 : 0)
-    j.to('.beam', { xPercent: label === 'desk' ? 0 : BEAM_SHIFT, duration: 0.9, ease: 'power2.inOut' }, '<')
+    j.to(stage, { turn: label === 'desk' ? 0 : 1, shift: aside ? 1 : 0, outro: label === 'contact' ? 1 : 0, duration: 0.9, ease: 'power2.inOut' }, closing.length ? 0.3 : 0)
+    j.to('.beam', { xPercent: aside ? BEAM_SHIFT : 0, duration: 0.9, ease: 'power2.inOut' }, '<')
     if (target >= 0) {
       const d = stage.drawers[target]
       j.to(d, { open: 1, duration: 0.45, ease: 'power2.out' }, '>-0.25').to(d, { rise: 1, duration: 0.6, ease: 'power1.inOut' })
@@ -274,7 +280,7 @@ export default function App() {
               intro={false}
             />
           </div>
-          <Stage covers={covers} paused={modal?.kind === 'file'} onRecord={openRecord} onDrawer={i => go(drawers[i].id)} onFile={() => setModal({ kind: 'file' })} />
+          <Stage covers={covers} paused={modal?.kind === 'file'} onRecord={openRecord} onDrawer={i => go(active === drawers[i].id ? 'front' : drawers[i].id)} onFile={() => setModal({ kind: 'file' })} />
 
           <header className="nav">
             <button className="nav__brand" onClick={() => go('desk')} aria-label="Back to the desk">
