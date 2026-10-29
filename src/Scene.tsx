@@ -160,7 +160,7 @@ function Rig(props: Props) {
     const half = tan * (baseDist + WALL)
     shelf.current.forEach((s, i) => {
       if (portrait) s.position.set(0, half * (0.66 - i * 0.22 + stage.shift * 0.6), -WALL)
-      else s.position.set((i ? 1 : -1) * half * aspect * 0.72, half * (0.62 + 0.07 * t), -WALL)
+      else s.position.set((i ? 1 : -1) * half * aspect * 0.72, half * (0.62 + 0.1 * t), -WALL)
       s.scale.setScalar(portrait ? 1.4 : 1)
     })
   })

@@ -305,10 +305,10 @@ a {
 /* the scroll timeline fades .intro; an open drawer hides the whole slot, so the two never fight over one element */
 .intro-slot {
   grid-area: 1 / 1;
-  /* low on the right, clear of the wall shelf above it */
-  align-self: end;
+  /* level with the desk: centred, nudged down by the margin so it clears the wall shelf above it */
+  align-self: center;
   width: min(560px, 38vw);
-  margin-bottom: max(16px, 6vh);
+  margin-top: 8vh;
   transition:
     opacity 0.3s,
     visibility 0.3s;
@@ -1205,7 +1205,8 @@ a {
   }
 
   .intro-slot {
-    margin-bottom: 0;
+    align-self: end;
+    margin-top: 0;
   }
 
   .intro {
