@@ -4,7 +4,7 @@ import type { CoverId } from './data'
 // reads it. Plain objects (not React state) so scrolling never re-renders React.
 export const stage = {
   turn: 0, // 0 = looking down at the desk top, 1 = facing the drawers
-  shift: 0, // 1 while a drawer chapter is on screen: desk slides aside for the panel
+  shift: 0, // 1 once the desk faces us: it slides aside for the introduction, a crate card or the contact sleeve
   outro: 0, // 1 at the contact section
   drawers: [0, 1, 2].map(() => ({ open: 0, rise: 0 })),
   hover: '', // id of the record or drawer under the pointer

@@ -28,6 +28,11 @@ export const profile = {
   github: 'https://github.com/Malhar124',
   linkedin: 'https://www.linkedin.com/in/malhar-udmale-a83772324',
   resume: '/resume.pdf',
+  // The introduction beside the desk once it faces you: the opening line, then a short paragraph.
+  intro: [
+    "I'm a B.Tech student in Information Technology at IIIT Allahabad, working where machine learning research meets fast systems code.",
+    "I co-wrote an ICML 2026 workshop paper on refusal in multilingual language models, and I'm co-first author of a CVIP 2026 paper on federated learning for medical imaging. I also build low-latency C++20, like an order-matching engine with lock-free queues. Right now I'm most curious about mechanistic interpretability and AI security.",
+  ],
   // Your photo, 3:4 (the desk frame shows all of it).
   photo: '/photo.jpg',
   // Where you are in the photo, as fractions of its width and height; the artist file's small thumbnail centres on it.

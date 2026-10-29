@@ -5,7 +5,7 @@ import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
 import Stage from './Scene'
 import { paintCovers, type Cover } from './covers'
-import { allRecords, drawers, profile, type CoverId } from './data'
+import { allRecords, drawers, profile, type CoverId, type Drawer } from './data'
 import { sound } from './sound'
 import { stage } from './stage'
 import ContactCover from './ContactCover'
@@ -29,9 +29,10 @@ const FONTS = [
   '40px Yellowtail',
 ]
 
-// Scroll timeline, in units of SCROLL_PER_UNIT viewport heights of scrolling.
-const CHAPTER = [1.5, 3.5, 5.5] // each drawer gets two units
-const END = 8.3
+// Scroll timeline, in units of SCROLL_PER_UNIT viewport heights of scrolling: the desk turns to face us and the
+// introduction comes in, then the contact sleeve. Drawers open only when clicked.
+const OUTRO = 2.3 // where the introduction gives way to the contact sleeve
+const END = 3.2
 // how much scrolling one timeline unit takes, in viewport heights; raise it to make scrolling less sensitive
 const SCROLL_PER_UNIT = 1.3
 const BEAM_SHIFT = (-0.17 / 1.4) * 100
@@ -46,14 +47,15 @@ const SECTIONS = [
 type Section = 'desk' | (typeof SECTIONS)[number][0]
 // where go() can take the tour: a section, or the front of the desk with every drawer shut
 type Stop = Section | 'front'
-const sectionAt = (t: number): Section =>
-  t < 1.4 ? 'desk' : t < 3.4 ? 'projects' : t < 5.4 ? 'research' : t < 7.4 ? 'achievements' : 'contact'
+const sectionAt = (t: number): Section => (t < OUTRO + 0.2 ? 'desk' : 'contact')
 
 type Modal = { kind: 'record'; id: CoverId } | { kind: 'file' } | null
 
 export default function App() {
   const [covers, setCovers] = useState<Map<CoverId, Cover>>()
-  const [active, setActive] = useState<Section>('desk')
+  const [section, setSection] = useState<Section>('desk') // where the scroll is
+  const [drawer, setDrawer] = useState<Drawer['id'] | null>(null) // the drawer opened by a click
+  const active = drawer ?? section
   const [modal, setModal] = useState<Modal>(null)
   const lenis = useRef<Lenis>(null)
   const timeline = useRef<gsap.core.Timeline>(null)
@@ -96,36 +98,24 @@ export default function App() {
           start: 'top top',
           end: 'bottom bottom',
           scrub: reduced ? true : 0.7,
-          onUpdate: self => setActive(sectionAt(self.progress * END)),
+          onUpdate: self => setSection(sectionAt(self.progress * END)),
         },
       })
       timeline.current = tl
       tl.addLabel('desk', 0)
         .to('.hero', { autoAlpha: 0, y: -16, duration: 0.25 }, 0.05)
         .to(stage, { turn: 1, duration: 1.1, ease: 'power2.inOut' }, 0)
-        .fromTo('.front-hint', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15 }, 1.05)
-        .addLabel('front', 1.3) // facing the drawers, all shut: where closing a drawer goes back to
-        .to('.front-hint', { autoAlpha: 0, duration: 0.12 }, CHAPTER[0] - 0.05)
-        .to(stage, { shift: 1, duration: 0.5, ease: 'power2.inOut' }, CHAPTER[0])
+        // the desk slides aside as it turns, making room for the introduction on the right
+        .to(stage, { shift: 1, duration: 0.5, ease: 'power2.inOut' }, 0.6)
         // the lamp follows the desk when it slides aside: 17% of the screen, and the beam layer is 140% wide
-        .to('.beam', { xPercent: BEAM_SHIFT, duration: 0.5, ease: 'power2.inOut' }, CHAPTER[0])
-      drawers.forEach((d, i) => {
-        const s = CHAPTER[i]
-        const dr = stage.drawers[i]
-        const panel = `#crate-${d.id}`
-        tl.to(dr, { open: 1, duration: 0.45, ease: 'power2.out' }, s)
-          // records move only while the drawer is fully open, or they would cut through the cabinet
-          .to(dr, { rise: 1, duration: 0.5, ease: 'power1.inOut' }, s + 0.45)
-          .fromTo(panel, { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out' }, s + 0.5)
-          .addLabel(d.id, s + 1)
-          .to(panel, { autoAlpha: 0, y: -28, duration: 0.25, ease: 'power2.in' }, s + 1.55)
-          .to(dr, { rise: 0, duration: 0.3, ease: 'power1.in' }, s + 1.55)
-          .to(dr, { open: 0, duration: 0.3, ease: 'power2.in' }, s + 1.85)
-      })
-      tl.to(stage, { outro: 1, duration: 0.6, ease: 'power2.inOut' }, 7.4)
-        .fromTo('.contact', { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }, 7.6)
+        .to('.beam', { xPercent: BEAM_SHIFT, duration: 0.5, ease: 'power2.inOut' }, 0.6)
+        .fromTo('.intro', { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.95)
+        .addLabel('front', 1.3) // facing the drawers, all shut, with the introduction: where the drawers open from
+        .to('.intro', { autoAlpha: 0, y: -28, duration: 0.25, ease: 'power2.in' }, OUTRO)
+        .to(stage, { outro: 1, duration: 0.6, ease: 'power2.inOut' }, OUTRO)
+        .fromTo('.contact', { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }, OUTRO + 0.2)
         // the contact sleeve arrives face up, then turns over to the details on its back
-        .fromTo('.sleeve', { rotateY: 0 }, { rotateY: 180, duration: 0.45, ease: 'power2.inOut' }, 7.85)
+        .fromTo('.sleeve', { rotateY: 0 }, { rotateY: 180, duration: 0.45, ease: 'power2.inOut' }, OUTRO + 0.45)
         .addLabel('contact', END)
         .set({}, {}, END) // pins the timeline length to END so it matches the track height
       // Record every tween's starting values now. Otherwise each records them when first reached, and a nav jump
@@ -162,9 +152,10 @@ export default function App() {
     else lenis.current?.start()
   }, [modal])
 
-  // Clicking a drawer or nav link goes straight there. Scrolling would play every chapter in between, so instead:
-  // pause the scroll timeline, jump the page invisibly, animate only what changes (put the current records and
-  // drawer away, then open the clicked one), and hand control back to the scroll timeline at the same state.
+  // Clicking a drawer or nav link goes straight there. Scrolling would play everything in between, so instead:
+  // pause the scroll timeline, jump the page invisibly to where that view lives (a drawer opens from the front view),
+  // animate only what changes (put the current records and drawer away, then open the clicked one), and hand control
+  // back to the scroll timeline at the same state.
   const go = (label: Stop) => {
     const tl = timeline.current
     const st = tl?.scrollTrigger
@@ -173,22 +164,25 @@ export default function App() {
     jump.current?.kill()
     st.disable(false)
     l.stop()
-    l.scrollTo(st.labelToScroll(label), { immediate: true, force: true })
-    setActive(label === 'front' ? 'desk' : label)
-
     const target = drawers.findIndex(d => d.id === label)
-    const aside = label !== 'desk' && label !== 'front' // the desk slides aside for a crate card or the contact sleeve
+    const at = target >= 0 ? 'front' : (label as 'desk' | 'front' | 'contact')
+    l.scrollTo(st.labelToScroll(at), { immediate: true, force: true })
+    setSection(at === 'contact' ? 'contact' : 'desk')
+    setDrawer(target >= 0 ? drawers[target].id : null)
+
+    const aside = at !== 'desk' // the desk slides aside for the introduction, a crate card or the contact sleeve
     const overlay = document.querySelector<HTMLElement>(
-      label === 'desk' ? '.hero' : label === 'front' ? '.front-hint' : label === 'contact' ? '.contact' : `#crate-${label}`,
+      target >= 0 ? `#crate-${label}` : at === 'desk' ? '.hero' : at === 'front' ? '.intro' : '.contact',
     )!
-    const others = gsap.utils.toArray<HTMLElement>('.hero, .front-hint, .crate, .contact').filter(el => el !== overlay)
+    // under an open drawer the introduction keeps its scroll state; the open drawer hides it (see .intro-slot)
+    const others = gsap.utils.toArray<HTMLElement>(target >= 0 ? '.hero, .crate, .contact' : '.hero, .intro, .crate, .contact').filter(el => el !== overlay)
     const closing = stage.drawers.filter((d, i) => i !== target && (d.open > 0.001 || d.rise > 0.001))
     const finish = () => {
       // A scrub still settling from the last scroll was only paused by disable(). Finish it first: left paused, the
       // next scroll update plays it out and puts the scene back where that scroll was heading, so the drawer would
       // shut and open a second time.
       st.getTween()?.progress(1)
-      tl.progress(tl.labels[label] / tl.duration()) // the exact state this scroll position maps to
+      tl.progress(tl.labels[at] / tl.duration()) // the exact state this scroll position maps to
       st.enable(false, false)
       l.start()
       jump.current = null
@@ -198,17 +192,39 @@ export default function App() {
     j.to(others, { autoAlpha: 0, duration: 0.25 }, 0)
     // records go back in before their drawer closes, so they never cut through the wood
     if (closing.length) j.to(closing, { rise: 0, duration: 0.35, ease: 'power1.in' }, 0).to(closing, { open: 0, duration: 0.3, ease: 'power2.in' })
-    j.to(stage, { turn: label === 'desk' ? 0 : 1, shift: aside ? 1 : 0, outro: label === 'contact' ? 1 : 0, duration: 0.9, ease: 'power2.inOut' }, closing.length ? 0.3 : 0)
+    j.to(stage, { turn: at === 'desk' ? 0 : 1, shift: aside ? 1 : 0, outro: at === 'contact' ? 1 : 0, duration: 0.9, ease: 'power2.inOut' }, closing.length ? 0.3 : 0)
     j.to('.beam', { xPercent: aside ? BEAM_SHIFT : 0, duration: 0.9, ease: 'power2.inOut' }, '<')
     if (target >= 0) {
       const d = stage.drawers[target]
       j.to(d, { open: 1, duration: 0.45, ease: 'power2.out' }, '>-0.25').to(d, { rise: 1, duration: 0.6, ease: 'power1.inOut' })
     }
-    if (Number(gsap.getProperty(overlay, 'opacity')) < 0.05) gsap.set(overlay, { y: label === 'desk' ? 0 : 28 })
+    if (Number(gsap.getProperty(overlay, 'opacity')) < 0.05) gsap.set(overlay, { y: at === 'desk' ? 0 : 28 })
     j.to(overlay, { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }, '>-0.35')
-    if (label === 'contact') j.to('.sleeve', { rotateY: 180, duration: 0.6, ease: 'power2.inOut' })
+    if (at === 'contact') j.to('.sleeve', { rotateY: 180, duration: 0.6, ease: 'power2.inOut' })
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) j.progress(1)
   }
+  // Shutting the open drawer (clicking it again, or scrolling away) puts its records back; the introduction returns.
+  const closeDrawer = () => {
+    const i = drawers.findIndex(d => d.id === drawer)
+    if (i < 0 || jump.current) return
+    setDrawer(null)
+    const d = stage.drawers[i]
+    gsap
+      .timeline()
+      .to(`#crate-${drawers[i].id}`, { autoAlpha: 0, y: -28, duration: 0.25, ease: 'power2.in' }, 0)
+      .to(d, { rise: 0, duration: 0.35, ease: 'power1.in' }, 0)
+      .to(d, { open: 0, duration: 0.3, ease: 'power2.in' })
+  }
+  // scrolling away from an open drawer shuts it (a small threshold, so settling after the jump doesn't count)
+  useEffect(() => {
+    const l = lenis.current
+    if (!l || !drawer) return
+    const from = l.scroll
+    return l.on('scroll', () => {
+      if (!jump.current && Math.abs(l.scroll - from) > 40) closeDrawer()
+    })
+  }, [drawer])
+
   // Opening a record: the desk shrinks, moves aside and tips its top towards us, the record flies onto the turntable
   // and plays, and its album window opens where the crate card was. Scrolling stays off until the window is closed
   // (see the modal effect above).
@@ -280,7 +296,7 @@ export default function App() {
               intro={false}
             />
           </div>
-          <Stage covers={covers} paused={modal?.kind === 'file'} onRecord={openRecord} onDrawer={i => go(active === drawers[i].id ? 'front' : drawers[i].id)} onFile={() => setModal({ kind: 'file' })} />
+          <Stage covers={covers} paused={modal?.kind === 'file'} onRecord={openRecord} onDrawer={i => (drawer === drawers[i].id ? closeDrawer() : go(drawers[i].id))} onFile={() => setModal({ kind: 'file' })} />
 
           <header className="nav">
             <button className="nav__brand" onClick={() => go('desk')} aria-label="Back to the desk">
@@ -322,9 +338,31 @@ export default function App() {
               <p className="hero__cue">Scroll to turn the desk</p>
             </section>
 
-            <p className="front-hint">Keep scrolling to open each drawer, or click one.</p>
-
             <div className="crates">
+              <div className={`intro-slot${drawer ? ' intro-slot--away' : ''}`}>
+                <section className="intro" aria-labelledby="intro-title">
+                  <figure className="intro__photo">
+                    {/* zoomed in on profile.photoFocus: the photo is a full-length shot */}
+                    <img
+                      src={profile.photo}
+                      alt={profile.name}
+                      onError={e => (e.currentTarget.parentElement!.hidden = true)}
+                      style={{ transformOrigin: `${profile.photoFocus[0] * 100}% ${profile.photoFocus[1] * 100}%` }}
+                    />
+                  </figure>
+                  <div className="intro__head">
+                    <p className="intro__eyebrow">Liner notes</p>
+                    <h2 id="intro-title">Hi, I'm {profile.name.split(' ')[0]}.</h2>
+                  </div>
+                  <p className="intro__lede">{profile.intro[0]}</p>
+                  <p className="intro__body">{profile.intro[1]}</p>
+                  <ul className="intro__hint">
+                    <li>Click a drawer to open that section.</li>
+                    <li>Scroll down for contact details.</li>
+                  </ul>
+                </section>
+              </div>
+
               {drawers.map(d => (
                 <section key={d.id} id={`crate-${d.id}`} className="crate" aria-labelledby={`crate-${d.id}-title`}>
                   <h2 id={`crate-${d.id}-title`} className="crate__tab">
