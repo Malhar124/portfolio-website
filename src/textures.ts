@@ -79,7 +79,8 @@ export function labelTexture(label: string) {
   x.fillStyle = '#efe3c6'
   x.fillRect(0, 0, 1600, 240)
   grain(x, 0.18, 1600, 240)
-  text(x, label, 800, 166, 'italic 700 150px "Bodoni Moda"', '#1f140b', { align: 'center', fit: 1480 })
+  // bold condensed caps, like a record-store crate divider; +3 because canvas adds spacing after the last letter too
+  text(x, label.toUpperCase(), 803, 172, '800 150px Archivo', '#1f140b', { align: 'center', stretch: 'condensed', spacing: 6, fit: 1460 })
   return tex(c)
 }
 
