@@ -307,8 +307,8 @@ a {
   grid-area: 1 / 1;
   /* low on the right, clear of the wall shelf above it */
   align-self: end;
-  width: min(480px, 38vw);
-  margin-bottom: max(16px, 7vh);
+  width: min(560px, 38vw);
+  margin-bottom: max(16px, 6vh);
   transition:
     opacity 0.3s,
     visibility 0.3s;
@@ -321,8 +321,9 @@ a {
 
 .intro {
   display: grid;
-  grid-template-columns: 96px 1fr;
-  column-gap: 22px;
+  /* sizes follow the screen height, so it stays clear of the wall shelf on short laptop screens */
+  grid-template-columns: clamp(96px, 14vh, 132px) 1fr;
+  column-gap: 26px;
   align-items: end;
   text-shadow: 0 1px 14px rgb(0 0 0 / 0.7);
   pointer-events: auto;
@@ -340,8 +341,8 @@ a {
   overflow: hidden;
   aspect-ratio: 4 / 5;
   margin: 0;
-  border: 6px solid var(--paper);
-  border-bottom-width: 18px;
+  border: 7px solid var(--paper);
+  border-bottom-width: 22px;
   box-shadow: 0 10px 28px rgb(0 0 0 / 0.55);
   rotate: -3deg;
 }
@@ -356,7 +357,7 @@ a {
 
 .intro__eyebrow {
   margin: 0 0 6px;
-  font: 700 12px/1 var(--type);
+  font: 700 13px/1 var(--type);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--brass);
@@ -364,13 +365,13 @@ a {
 
 .intro h2 {
   margin: 0 0 4px;
-  font: italic 500 clamp(34px, 3.2vw, 46px) / 1.05 var(--serif);
+  font: italic 500 clamp(40px, 6vh, 60px) / 1.05 var(--serif);
   color: var(--parchment);
 }
 
 .intro__lede {
-  margin: 22px 0 10px;
-  font-size: 17px;
+  margin: 26px 0 12px;
+  font-size: clamp(17px, 2.3vh, 21px);
   line-height: 1.5;
   color: var(--parchment);
   text-wrap: pretty;
@@ -378,7 +379,7 @@ a {
 
 .intro__body {
   margin: 0;
-  font-size: 15px;
+  font-size: clamp(15px, 1.95vh, 18px);
   line-height: 1.6;
   color: var(--parchment-dim);
   text-wrap: pretty;
@@ -387,11 +388,11 @@ a {
 .intro__hint {
   display: grid;
   gap: 6px;
-  margin: 22px 0 0;
+  margin: 24px 0 0;
   padding: 14px 0 0;
   border-top: 1px solid rgb(201 164 92 / 0.35);
   list-style: none;
-  font: 15px/1.4 var(--type);
+  font: clamp(15px, 1.9vh, 17px) / 1.4 var(--type);
   color: var(--brass);
 }
 

@@ -34,6 +34,9 @@ const DECK = { px: -0.13, pz: 0.02, pivot: [0.42, 0.15, -0.27] as const, swing: 
 // how far the table top tips towards the camera (radians from upright): the opening view, and again while an album
 // is open
 const TOP_FRONT = 0.78
+// how far the desk turns anti-clockwise (seen from above) once it faces us, angling the drawers towards the
+// introduction; the contact section turns it further, to face the card
+const FRONT_TURN = 0.15
 const UP = new THREE.Vector3(0, 1, 0)
 const { lerp, clamp, smoothstep, damp } = THREE.MathUtils
 
@@ -143,22 +146,21 @@ function Rig(props: Props) {
     look.current.y = damp(look.current.y, pointer.y, 3, dt)
     // top-front to start, the front for the drawers, and top-front again with an album open so the record is seen playing
     inner.current.rotation.x = lerp(lerp(TOP_FRONT, 0.16, t), TOP_FRONT, a) - look.current.y * 0.035
-    // at the contact section the desk turns to face the card
-    inner.current.rotation.y = look.current.x * 0.06 + stage.outro * (portrait ? 0.3 : 0.45)
+    inner.current.rotation.y = look.current.x * 0.06 + lerp(FRONT_TURN * t * (1 - a), portrait ? 0.3 : 0.45, stage.outro)
 
     cam.position.set(0, 0, baseDist)
     cam.lookAt(0, 0, 0)
     // an open album window takes more room than a crate card: the desk shrinks and moves further aside, and with
     // the records put away it no longer needs the headroom above it
     outer.current.scale.setScalar(1 - a * (portrait ? 0.3 : 0.1))
-    outer.current.position.x = portrait ? 0 : -(stage.shift * 0.17 + a * 0.07) * visW
+    outer.current.position.x = portrait ? 0 : -(stage.shift * 0.19 + a * 0.07) * visW
     outer.current.position.y = portrait ? (stage.shift * 0.18 + a * 0.12) * visH - t * 0.3 : -t * 0.35 * (1 - a)
     // the wall shelves keep their place on screen in every view: the upper corners, or stacked above the desk on a
     // phone, where they slide off the top when a crate card pushes the desk up (no room for them and the records)
     const half = tan * (baseDist + WALL)
     shelf.current.forEach((s, i) => {
       if (portrait) s.position.set(0, half * (0.66 - i * 0.22 + stage.shift * 0.6), -WALL)
-      else s.position.set((i ? 1 : -1) * half * aspect * 0.72, half * 0.62, -WALL)
+      else s.position.set((i ? 1 : -1) * half * aspect * 0.72, half * (0.62 + 0.07 * t), -WALL)
       s.scale.setScalar(portrait ? 1.4 : 1)
     })
   })
