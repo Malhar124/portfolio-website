@@ -37,6 +37,12 @@ const TOP_FRONT = 0.78
 // how far the desk turns anti-clockwise (seen from above) once it faces us, angling the drawers towards the
 // introduction; the contact section turns it further, to face the card
 const FRONT_TURN = 0.15
+// the tower speakers either side of the desk: [width, height, depth], and the gap to the desk
+const TOWER = [0.42, 2.25, 0.42] as const
+const TOWER_GAP = 0.1
+// how far the desk (with its towers) slides aside for the introduction, a crate card or the contact sleeve, as a
+// share of the screen width; App.tsx moves the lamp beam by the same share
+const SHIFT = 0.2
 const UP = new THREE.Vector3(0, 1, 0)
 const { lerp, clamp, smoothstep, damp } = THREE.MathUtils
 
@@ -136,8 +142,9 @@ function Rig(props: Props) {
     const fit = (w: number, h: number) => Math.max(h / 2 / tan, w / 2 / (tan * aspect))
     // the opening view frames the table top and what stands on it; the front view leaves room for records rising
     // above the desk
-    const dTop = portrait ? fit(3.7, 3.4) : fit(5.4, 4)
-    const dFront = portrait ? fit(3.9, 6.2) : fit(7.8, 4.4)
+    // both views take in the tower speakers either side of the desk
+    const dTop = portrait ? fit(4.5, 3.4) : fit(5.6, 4.1)
+    const dFront = portrait ? fit(4.5, 6.2) : fit(8.4, 4.75)
     const baseDist = lerp(dTop, dFront, t) + stage.outro * 1.2
     const visW = 2 * tan * aspect * baseDist
     const visH = 2 * tan * baseDist
@@ -152,8 +159,8 @@ function Rig(props: Props) {
     cam.lookAt(0, 0, 0)
     // an open album window takes more room than a crate card: the desk shrinks and moves further aside, and with
     // the records put away it no longer needs the headroom above it
-    outer.current.scale.setScalar(1 - a * (portrait ? 0.3 : 0.1))
-    outer.current.position.x = portrait ? 0 : -(stage.shift * 0.19 + a * 0.07) * visW
+    outer.current.scale.setScalar(1 - a * (portrait ? 0.3 : 0.25))
+    outer.current.position.x = portrait ? 0 : -(stage.shift * SHIFT + a * 0.05) * visW
     outer.current.position.y = portrait ? (stage.shift * 0.18 + a * 0.12) * visH - t * 0.3 : -t * 0.35 * (1 - a)
     // the wall shelves keep their place on screen in every view: the upper corners, or stacked above the desk on a
     // phone, where they slide off the top when a crate card pushes the desk up (no room for them and the records)
@@ -183,9 +190,15 @@ function Rig(props: Props) {
 function useMaterials() {
   return useMemo(() => {
     const front = woodTexture(3, [1, 0.14])
+    const grain = woodTexture(2, [1, 1])
+    // the towers' veneer runs up and down
+    const upright = grain.clone()
+    upright.rotation = Math.PI / 2
+    upright.center.set(0.5, 0.5)
     return {
       top: new THREE.MeshPhysicalMaterial({ map: woodTexture(1, [1, 0.48]), roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.22 }),
-      body: new THREE.MeshStandardMaterial({ map: woodTexture(2, [1, 1]), roughness: 0.55 }),
+      body: new THREE.MeshStandardMaterial({ map: grain, roughness: 0.55 }),
+      tower: new THREE.MeshPhysicalMaterial({ map: upright, roughness: 0.42, clearcoat: 0.5, clearcoatRoughness: 0.3 }),
       fronts: [0, 1, 2].map(i => {
         const map = front.clone()
         map.offset.y = i * 0.31
@@ -268,6 +281,9 @@ function Desk(props: Props & { m: Mats }) {
         )),
       )}
       <TopProps m={m} vinyls={vinyls} onFile={props.onFile} />
+      {[-1, 1].map(s => (
+        <Tower key={s} x={s * (W / 2 + TOWER_GAP + TOWER[0] / 2)} m={m} />
+      ))}
     </group>
   )
 }
@@ -697,6 +713,42 @@ function Speaker({ m }: { m: Mats }) {
       <mesh position={[0.24, -0.08, front + 0.004]}>
         <sphereGeometry args={[0.008, 10, 8]} />
         <meshStandardMaterial ref={pilot} color="#3a1a06" emissive="#ffa040" emissiveIntensity={0} />
+      </mesh>
+    </group>
+  )
+}
+
+// A tall walnut tower speaker standing on the floor beside the desk: grille cloth, a tweeter over two woofers that
+// pump with the music, and a bass port. It is part of the desk's group, so it turns and tilts with the desk.
+function Tower({ x, m }: { x: number; m: Mats }) {
+  const [w, h, d] = TOWER
+  const front = d / 2
+  const plinth = 0.05
+  return (
+    <group position={[x, -H / 2 - LEG + plinth + h / 2, 0]}>
+      <mesh material={m.tower} castShadow receiveShadow>
+        <boxGeometry args={TOWER} />
+      </mesh>
+      <mesh position-y={-h / 2 - plinth / 2} material={m.rubber}>
+        <boxGeometry args={[w - 0.06, plinth, d - 0.06]} />
+      </mesh>
+      <mesh position-z={front + 0.001}>
+        <planeGeometry args={[w - 0.06, h - 0.08]} />
+        <meshStandardMaterial color="#17110c" roughness={0.9} />
+      </mesh>
+      <Tweeter position={[0, 0.88, front]} m={m} scale={1.3} />
+      <Woofer position={[0, 0.54, front]} r={0.14} m={m} />
+      <Woofer position={[0, 0.12, front]} r={0.14} m={m} />
+      <mesh position={[0, -0.7, front + 0.002]}>
+        <circleGeometry args={[0.06, 32]} />
+        <meshBasicMaterial color="#050302" />
+      </mesh>
+      <mesh position={[0, -0.7, front + 0.004]} material={m.brass}>
+        <torusGeometry args={[0.064, 0.006, 10, 32]} />
+      </mesh>
+      <mesh position-y={-h / 2 - plinth + 0.002} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[w + 0.5, d + 0.5]} />
+        <meshBasicMaterial map={m.shadow} transparent depthWrite={false} />
       </mesh>
     </group>
   )

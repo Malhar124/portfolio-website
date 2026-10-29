@@ -35,9 +35,9 @@ const OUTRO = 2.3 // where the introduction gives way to the contact sleeve
 const END = 3.2
 // how much scrolling one timeline unit takes, in viewport heights; raise it to make scrolling less sensitive
 const SCROLL_PER_UNIT = 1.3
-const BEAM_SHIFT = (-0.19 / 1.4) * 100
-// with an album window open the desk moves a further 7% aside (see Rig in Scene.tsx)
-const BEAM_ALBUM = (-0.26 / 1.4) * 100
+const BEAM_SHIFT = (-0.2 / 1.4) * 100 // SHIFT in Scene.tsx
+// with an album window open the desk moves a further 5% aside (see Rig in Scene.tsx)
+const BEAM_ALBUM = (-0.25 / 1.4) * 100
 const SECTIONS = [
   ['projects', 'Projects'],
   ['research', 'Research'],
@@ -107,7 +107,7 @@ export default function App() {
         .to(stage, { turn: 1, duration: 1.1, ease: 'power2.inOut' }, 0)
         // the desk slides aside as it turns, making room for the introduction on the right
         .to(stage, { shift: 1, duration: 0.5, ease: 'power2.inOut' }, 0.6)
-        // the lamp follows the desk when it slides aside: 19% of the screen, and the beam layer is 140% wide
+        // the lamp follows the desk when it slides aside: 20% of the screen, and the beam layer is 140% wide
         .to('.beam', { xPercent: BEAM_SHIFT, duration: 0.5, ease: 'power2.inOut' }, 0.6)
         .fromTo('.intro', { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.95)
         .addLabel('front', 1.3) // facing the drawers, all shut, with the introduction: where the drawers open from
