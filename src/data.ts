@@ -184,3 +184,17 @@ export const drawers: Drawer[] = [
 ]
 
 export const allRecords = drawers.flatMap(d => d.records)
+
+// Decoration only: the two wall shelves behind the desk, first shelf first. Covers come from album-art.
+export const shelves: Album['after'][][] = [
+  [
+    { artist: 'Tame Impala', album: 'Currents' },
+    { artist: 'Justice', album: 'Hyperdrama' },
+    { artist: 'A$AP Rocky', album: "Don't Be Dumb" },
+  ],
+  [
+    { artist: 'Tyler, The Creator', album: 'IGOR' },
+    { artist: 'Travis Scott', album: 'Birds in the Trap Sing McKnight' },
+    { artist: 'Don Toliver', album: 'Heaven or Hell' },
+  ],
+]

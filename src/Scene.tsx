@@ -1,9 +1,10 @@
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Environment, Lightformer, RoundedBox, Sparkles } from '@react-three/drei'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import albumArt from 'album-art'
+import { useEffect, useMemo, useRef, useState, type Ref } from 'react'
 import * as THREE from 'three'
 import type { Cover } from './covers'
-import { allRecords, drawers, profile, type Album, type CoverId } from './data'
+import { allRecords, drawers, profile, shelves, type Album, type CoverId } from './data'
 import { sound } from './sound'
 import { stage } from './stage'
 import { dossierTexture, labelTexture, photoPlaceholder, photoTexture, shadowTexture, vinylTexture, woodTexture } from './textures'
@@ -22,6 +23,9 @@ const PULL = 0.95 // how far a drawer slides out
 const PHOTO = [0.36, 0.48] as const
 // drawer label plate: as large as fits between the pull and the drawer's top edge, so it reads from the front view
 const LABEL = [1.4, 0.21] as const
+// the wall shelves: how far behind the desk they hang, and the size of their albums
+const WALL = 2.5
+const SHELF_REC = 0.55
 // Table-top layout: [x across the desk, z from the back (-) to the front (+)]. The speaker sits low at the front left
 // so the photo, standing behind it, still shows above it.
 const LAYOUT = { frame: [-1.25, -0.4], speaker: [-1.2, 0.3], deck: -0.29, file: 0.88 } as const
@@ -115,7 +119,9 @@ function Lamp() {
 function Rig(props: Props) {
   const outer = useRef<THREE.Group>(null!)
   const inner = useRef<THREE.Group>(null!)
+  const shelf = useRef<THREE.Group[]>([])
   const look = useRef({ x: 0, y: 0 })
+  const m = useMaterials()
 
   useFrame(({ camera, size, pointer }, dt) => {
     const cam = camera as THREE.PerspectiveCamera
@@ -147,14 +153,26 @@ function Rig(props: Props) {
     outer.current.scale.setScalar(1 - a * (portrait ? 0.3 : 0.1))
     outer.current.position.x = portrait ? 0 : -(stage.shift * 0.17 + a * 0.07) * visW
     outer.current.position.y = portrait ? (stage.shift * 0.18 + a * 0.12) * visH - t * 0.3 : -t * 0.35 * (1 - a)
+    // the wall shelves keep their place on screen in every view: the upper corners, or stacked above the desk on a
+    // phone, where they slide off the top when a crate card pushes the desk up (no room for them and the records)
+    const half = tan * (baseDist + WALL)
+    shelf.current.forEach((s, i) => {
+      if (portrait) s.position.set(0, half * (0.66 - i * 0.22 + stage.shift * 0.6), -WALL)
+      else s.position.set((i ? 1 : -1) * half * aspect * 0.72, half * 0.62, -WALL)
+      s.scale.setScalar(portrait ? 1.4 : 1)
+    })
   })
 
   return (
     <group ref={outer}>
       {/* dust drifting down through the lamp beam; moves with the desk but doesn't tilt */}
       <Sparkles count={45} scale={[2.6, 3.6, 2]} position={[0, 1.3, 0.6]} size={4} speed={0.12} noise={0.3} opacity={0.5} color="#ffe2b8" />
+      {/* outside the tilting group: they hang on the wall, not on the desk */}
+      {shelves.map((albums, i) => (
+        <Shelf key={i} ref={(g: THREE.Group) => void (shelf.current[i] = g)} albums={albums} m={m} />
+      ))}
       <group ref={inner}>
-        <Desk {...props} />
+        <Desk {...props} m={m} />
       </group>
     </group>
   )
@@ -185,8 +203,8 @@ function useMaterials() {
   }, [])
 }
 
-function Desk(props: Props) {
-  const m = useMaterials()
+function Desk(props: Props & { m: Mats }) {
+  const { m } = props
   // one set of record faces, shared by each sleeve's disc and the turntable
   const vinyls: Vinyls = useMemo(
     () =>
@@ -249,6 +267,62 @@ function Desk(props: Props) {
       )}
       <TopProps m={m} vinyls={vinyls} onFile={props.onFile} />
     </group>
+  )
+}
+
+// A walnut wall shelf on brass brackets, its albums leaning back against the wall.
+function Shelf({ ref, albums, m }: { ref: Ref<THREE.Group>; albums: Album['after'][]; m: Mats }) {
+  const step = SHELF_REC + 0.08
+  const len = albums.length * step + 0.12
+  return (
+    <group ref={ref}>
+      <mesh position-y={-0.025} material={m.body}>
+        <boxGeometry args={[len, 0.05, 0.3]} />
+      </mesh>
+      {[-1, 1].map(s => (
+        <group key={s} position-x={s * len * 0.32}>
+          <mesh position={[0, -0.0625, 0]} material={m.brass}>
+            <boxGeometry args={[0.025, 0.025, 0.28]} />
+          </mesh>
+          <mesh position={[0, -0.13, -0.135]} material={m.brass}>
+            <boxGeometry args={[0.025, 0.16, 0.025]} />
+          </mesh>
+        </group>
+      ))}
+      {albums.map((a, i) => (
+        <group key={a.album} position={[(i - (albums.length - 1) / 2) * step, SHELF_REC / 2, -0.04]} rotation-x={-0.1}>
+          <mesh material={m.sleeveEdge}>
+            <boxGeometry args={[SHELF_REC, SHELF_REC, 0.012]} />
+          </mesh>
+          <ShelfCover after={a} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// The album's real cover, fetched with album-art. Decoration only, so if the lookup fails the sleeve stays plain.
+function ShelfCover({ after }: { after: Album['after'] }) {
+  const [cover, setCover] = useState<THREE.Texture>()
+  useEffect(() => {
+    let live = true
+    albumArt(after.artist, { album: after.album, size: 'medium' })
+      .then(url => new THREE.TextureLoader().loadAsync(url))
+      .then(t => {
+        t.colorSpace = THREE.SRGBColorSpace
+        if (live) setCover(t)
+      })
+      .catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [after.artist, after.album])
+  if (!cover) return null
+  return (
+    <mesh position-z={0.0061}>
+      <planeGeometry args={[SHELF_REC, SHELF_REC]} />
+      <meshStandardMaterial map={cover} roughness={0.55} />
+    </mesh>
   )
 }
 
