@@ -290,38 +290,35 @@ function Shelf({ ref, albums, m }: { ref: Ref<THREE.Group>; albums: Album['after
         </group>
       ))}
       {albums.map((a, i) => (
-        <group key={a.album} position={[(i - (albums.length - 1) / 2) * step, SHELF_REC / 2, -0.04]} rotation-x={-0.1}>
-          <mesh material={m.sleeveEdge}>
-            <boxGeometry args={[SHELF_REC, SHELF_REC, 0.012]} />
-          </mesh>
-          <ShelfCover after={a} />
-        </group>
+        <ShelfAlbum key={a.album} after={a} x={(i - (albums.length - 1) / 2) * step} m={m} />
       ))}
     </group>
   )
 }
 
-// The album's real cover, fetched with album-art. Decoration only, so if the lookup fails the sleeve stays plain.
-function ShelfCover({ after }: { after: Album['after'] }) {
-  const [cover, setCover] = useState<THREE.Texture>()
+// One album leaning on the wall. Its real cover, fetched with album-art, is the sleeve's own front face: a separate
+// plane just in front of the sleeve z-fights this far from the camera and flickers as it moves. Decoration only, so
+// if the lookup fails the sleeve stays plain.
+function ShelfAlbum({ after, x, m }: { after: Album['after']; x: number; m: Mats }) {
+  const [cover, setCover] = useState<THREE.Material>(m.sleeveEdge)
   useEffect(() => {
     let live = true
     albumArt(after.artist, { album: after.album, size: 'medium' })
       .then(url => new THREE.TextureLoader().loadAsync(url))
       .then(t => {
         t.colorSpace = THREE.SRGBColorSpace
-        if (live) setCover(t)
+        if (live) setCover(new THREE.MeshStandardMaterial({ map: t, roughness: 0.55 }))
       })
       .catch(() => {})
     return () => {
       live = false
     }
   }, [after.artist, after.album])
-  if (!cover) return null
+  // box faces: +x, -x, +y, -y, front, back
+  const faces = useMemo(() => [m.sleeveEdge, m.sleeveEdge, m.sleeveEdge, m.sleeveEdge, cover, m.sleeveEdge], [m, cover])
   return (
-    <mesh position-z={0.0061}>
-      <planeGeometry args={[SHELF_REC, SHELF_REC]} />
-      <meshStandardMaterial map={cover} roughness={0.55} />
+    <mesh position={[x, SHELF_REC / 2, -0.04]} rotation-x={-0.1} material={faces}>
+      <boxGeometry args={[SHELF_REC, SHELF_REC, 0.012]} />
     </mesh>
   )
 }
