@@ -79,9 +79,9 @@ export function labelTexture(label: string) {
   x.fillStyle = '#efe3c6'
   x.fillRect(0, 0, 1600, 240)
   grain(x, 0.18, 1600, 240)
-  // typed caps, like a card-catalogue label. One size for every drawer, set so the longest name fits (a typewriter
-  // letter is 0.6em wide); +2 because canvas adds spacing after the last letter too
-  text(x, label.toUpperCase(), 802, 162, '700 124px "Courier Prime"', '#1f140b', { align: 'center', spacing: 4, fit: 1520 })
+  // set like an old record label, in the introduction's display serif. One size for every drawer, set so the longest
+  // name fits; +1 because canvas adds spacing after the last letter too
+  text(x, label, 801, 172, '148px "DM Serif Display"', '#1f140b', { align: 'center', spacing: 2, fit: 1480 })
   return tex(c)
 }
 

@@ -10,6 +10,8 @@
   --serif: 'Bodoni Moda', 'Didot', Georgia, serif;
   --sans: 'Libre Franklin', system-ui, sans-serif;
   --type: 'Courier Prime', 'Courier New', monospace;
+  /* sturdier than Bodoni's hairlines, for large type on the dark wall and the drawer labels */
+  --display: 'DM Serif Display', 'Bodoni Moda', Georgia, serif;
   --gutter: max(20px, 4vw);
   color-scheme: dark;
 }
@@ -365,7 +367,7 @@ a {
 
 .intro h2 {
   margin: 0 0 4px;
-  font: italic 500 clamp(40px, 6vh, 60px) / 1.05 var(--serif);
+  font: italic 400 clamp(42px, 6.2vh, 62px) / 1.05 var(--display);
   color: var(--parchment);
 }
 
@@ -1215,7 +1217,7 @@ a {
   }
 
   .intro h2 {
-    font-size: 30px;
+    font-size: 34px;
   }
 
   .intro__lede {

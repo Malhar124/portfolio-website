@@ -25,6 +25,7 @@ const FONTS = [
   '600 40px "Bodoni Moda"',
   '500 40px Archivo',
   '800 40px Archivo',
+  '40px "DM Serif Display"',
   '40px Fruktur',
   '40px Yellowtail',
 ]
