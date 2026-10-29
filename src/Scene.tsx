@@ -677,12 +677,8 @@ function TopProps({ m, vinyls, onFile }: { m: Mats; vinyls: Vinyls; onFile: () =
 // light. It is where the record's music comes out, so the woofer pumps with the music and the light is on while it
 // plays.
 function Speaker({ m }: { m: Mats }) {
-  const cone = useRef<THREE.Group>(null!)
   const pilot = useRef<THREE.MeshStandardMaterial>(null!)
-  const pump = useRef(0)
-  useFrame((_, dt) => {
-    pump.current = damp(pump.current, sound.level(), 20, dt)
-    cone.current.position.z = 0.142 + pump.current * 0.02
+  useFrame(() => {
     pilot.current.emissiveIntensity = sound.playing ? 2.2 : 0
   })
   const front = 0.14 // the cabinet's front face, from its centre
@@ -693,39 +689,60 @@ function Speaker({ m }: { m: Mats }) {
         <planeGeometry args={[0.54, 0.3]} />
         <meshStandardMaterial color="#17110c" roughness={0.9} />
       </mesh>
-      <group position={[-0.11, 0.005, 0]}>
-        <mesh position-z={front + 0.006} material={m.brass}>
-          <torusGeometry args={[0.122, 0.009, 12, 48]} />
-        </mesh>
-        <mesh position-z={front + 0.004} rotation-x={Math.PI / 2} material={m.rubber}>
-          <cylinderGeometry args={[0.116, 0.116, 0.006, 48]} />
-        </mesh>
-        <group ref={cone}>
-          <mesh rotation-x={-Math.PI / 2}>
-            <coneGeometry args={[0.1, 0.035, 48, 1, true]} />
-            <meshStandardMaterial color="#1c1a19" roughness={0.85} side={THREE.DoubleSide} />
-          </mesh>
-          <mesh position-z={-0.012} scale-z={0.5}>
-            <sphereGeometry args={[0.034, 24, 12]} />
-            <meshStandardMaterial color="#2a2624" roughness={0.6} />
-          </mesh>
-        </group>
-      </group>
-      <group position={[0.17, 0.07, front + 0.004]}>
-        <mesh material={m.brass}>
-          <torusGeometry args={[0.04, 0.006, 10, 32]} />
-        </mesh>
-        <mesh scale-z={0.45}>
-          <sphereGeometry args={[0.033, 20, 10]} />
-          <meshStandardMaterial color="#141210" roughness={0.4} />
-        </mesh>
-      </group>
+      <Woofer position={[-0.11, 0.005, front]} r={0.1} m={m} />
+      <Tweeter position={[0.17, 0.07, front]} m={m} />
       <mesh position={[0.17, -0.08, front + 0.012]} rotation-x={Math.PI / 2} material={m.brass} castShadow>
         <cylinderGeometry args={[0.028, 0.03, 0.022, 24]} />
       </mesh>
       <mesh position={[0.24, -0.08, front + 0.004]}>
         <sphereGeometry args={[0.008, 10, 8]} />
         <meshStandardMaterial ref={pilot} color="#3a1a06" emissive="#ffa040" emissiveIntensity={0} />
+      </mesh>
+    </group>
+  )
+}
+
+// A woofer that pumps with the music: brass ring, rubber surround, cone and dust cap. Its face sits at `position`,
+// facing +z; r is the cone's radius.
+function Woofer({ position, r, m }: { position: [number, number, number]; r: number; m: Mats }) {
+  const cone = useRef<THREE.Group>(null!)
+  const pump = useRef(0)
+  useFrame((_, dt) => {
+    pump.current = damp(pump.current, sound.level(), 20, dt)
+    cone.current.position.z = 0.002 + pump.current * 0.02
+  })
+  return (
+    <group position={position} scale={r / 0.1}>
+      <mesh position-z={0.006} material={m.brass}>
+        <torusGeometry args={[0.122, 0.009, 12, 48]} />
+      </mesh>
+      <mesh position-z={0.004} rotation-x={Math.PI / 2} material={m.rubber}>
+        <cylinderGeometry args={[0.116, 0.116, 0.006, 48]} />
+      </mesh>
+      <group ref={cone}>
+        <mesh rotation-x={-Math.PI / 2}>
+          <coneGeometry args={[0.1, 0.035, 48, 1, true]} />
+          <meshStandardMaterial color="#1c1a19" roughness={0.85} side={THREE.DoubleSide} />
+        </mesh>
+        <mesh position-z={-0.012} scale-z={0.5}>
+          <sphereGeometry args={[0.034, 24, 12]} />
+          <meshStandardMaterial color="#2a2624" roughness={0.6} />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
+// A dome tweeter in a brass ring, its face at `position`, facing +z.
+function Tweeter({ position, m, scale = 1 }: { position: [number, number, number]; m: Mats; scale?: number }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh position-z={0.004} material={m.brass}>
+        <torusGeometry args={[0.04, 0.006, 10, 32]} />
+      </mesh>
+      <mesh position-z={0.004} scale-z={0.45}>
+        <sphereGeometry args={[0.033, 20, 10]} />
+        <meshStandardMaterial color="#141210" roughness={0.4} />
       </mesh>
     </group>
   )
