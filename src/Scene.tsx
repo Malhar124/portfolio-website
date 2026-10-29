@@ -20,6 +20,8 @@ const FRONT = D / 2
 const REC = 0.82
 const PULL = 0.95 // how far a drawer slides out
 const PHOTO = [0.36, 0.48] as const
+// drawer label plate: as large as fits between the pull and the drawer's top edge, so it reads from the front view
+const LABEL = [1.4, 0.21] as const
 // Table-top layout: [x across the desk, z from the back (-) to the front (+)]. The speaker sits low at the front left
 // so the photo, standing behind it, still shows above it.
 const LAYOUT = { frame: [-1.25, -0.4], speaker: [-1.2, 0.3], deck: -0.29, file: 0.88 } as const
@@ -304,16 +306,16 @@ function Drawer({ index, label, m, onOpen }: { index: number; label: string; m: 
         <boxGeometry args={[iw, ih, 0.025]} />
       </mesh>
       {/* card-catalogue label holder */}
-      <group position={[0, 0.075, FRONT + 0.062]}>
+      <group position={[0, 0.065, FRONT + 0.062]}>
         <mesh>
-          <planeGeometry args={[0.62, 0.135]} />
+          <planeGeometry args={LABEL} />
           <meshStandardMaterial map={card} roughness={0.85} />
         </mesh>
         {[
-          [0, 0.076, 0.68, 0.018],
-          [0, -0.076, 0.68, 0.018],
-          [-0.331, 0, 0.018, 0.17],
-          [0.331, 0, 0.018, 0.17],
+          [0, LABEL[1] / 2 + 0.009, LABEL[0] + 0.06, 0.018],
+          [0, -LABEL[1] / 2 - 0.009, LABEL[0] + 0.06, 0.018],
+          [-LABEL[0] / 2 - 0.021, 0, 0.018, LABEL[1] + 0.035],
+          [LABEL[0] / 2 + 0.021, 0, 0.018, LABEL[1] + 0.035],
         ].map(([x, y, w, h]) => (
           <mesh key={`${x}${y}`} position={[x, y, 0.004]} material={m.brass} castShadow>
             <boxGeometry args={[w, h, 0.012]} />

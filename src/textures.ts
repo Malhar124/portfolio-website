@@ -73,12 +73,13 @@ export function shadowTexture() {
 }
 
 export function labelTexture(label: string) {
-  const c = makeCanvas(1024, 224)
+  // same aspect as the label plate on the drawer front (Scene.tsx LABEL)
+  const c = makeCanvas(1600, 240)
   const x = ctx2d(c)
   x.fillStyle = '#efe3c6'
-  x.fillRect(0, 0, 1024, 224)
-  grain(x, 0.18, 1024, 224)
-  text(x, label, 512, 142, 'italic 600 108px "Bodoni Moda"', '#1f140b', { align: 'center', fit: 900 })
+  x.fillRect(0, 0, 1600, 240)
+  grain(x, 0.18, 1600, 240)
+  text(x, label, 800, 166, 'italic 700 150px "Bodoni Moda"', '#1f140b', { align: 'center', fit: 1480 })
   return tex(c)
 }
 
