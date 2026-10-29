@@ -79,8 +79,9 @@ export function labelTexture(label: string) {
   x.fillStyle = '#efe3c6'
   x.fillRect(0, 0, 1600, 240)
   grain(x, 0.18, 1600, 240)
-  // bold condensed caps, like a record-store crate divider; +3 because canvas adds spacing after the last letter too
-  text(x, label.toUpperCase(), 803, 172, '800 150px Archivo', '#1f140b', { align: 'center', stretch: 'condensed', spacing: 6, fit: 1460 })
+  // typed caps, like a card-catalogue label. One size for every drawer, set so the longest name fits (a typewriter
+  // letter is 0.6em wide); +2 because canvas adds spacing after the last letter too
+  text(x, label.toUpperCase(), 802, 162, '700 124px "Courier Prime"', '#1f140b', { align: 'center', spacing: 4, fit: 1520 })
   return tex(c)
 }
 

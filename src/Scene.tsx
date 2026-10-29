@@ -22,7 +22,7 @@ const REC = 0.82
 const PULL = 0.95 // how far a drawer slides out
 const PHOTO = [0.36, 0.48] as const
 // drawer label plate: as large as fits between the pull and the drawer's top edge, so it reads from the front view
-const LABEL = [1.4, 0.21] as const
+const LABEL = [1.6, 0.24] as const
 // the wall shelves: how far behind the desk they hang, and the size of their albums
 const WALL = 2.5
 const SHELF_REC = 0.55
@@ -380,7 +380,7 @@ function Drawer({ index, label, m, onOpen }: { index: number; label: string; m: 
         <boxGeometry args={[iw, ih, 0.025]} />
       </mesh>
       {/* card-catalogue label holder */}
-      <group position={[0, 0.065, FRONT + 0.062]}>
+      <group position={[0, 0.048, FRONT + 0.062]}>
         <mesh>
           <planeGeometry args={LABEL} />
           <meshStandardMaterial map={card} roughness={0.85} />
@@ -396,7 +396,7 @@ function Drawer({ index, label, m, onOpen }: { index: number; label: string; m: 
           </mesh>
         ))}
       </group>
-      <group position={[0, -0.095, FRONT + 0.06]}>
+      <group position={[0, -0.13, FRONT + 0.06]}>
         <mesh position-z={0.055} rotation-z={Math.PI / 2} material={m.brass} castShadow>
           <cylinderGeometry args={[0.016, 0.016, 0.5, 20]} />
         </mesh>
